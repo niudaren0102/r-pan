@@ -23,6 +23,7 @@ public class RPanServerLauncher {
     }
     @GetMapping("/hello")
     public R<String> hello(@NotBlank(message = "name不能为空") String name){
-        return R.success("hello "+name);
+        System.out.println(Thread.currentThread().getContextClassLoader());
+        return R.success("hello"+name);
     }
 }
