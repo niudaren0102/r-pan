@@ -11,7 +11,13 @@ spring:
     multipart:
       max-file-size: 3072MB
       max-request-size: 3072MB #上传文件大小和请求大小
-#spring:
+  datasource:
+    username: rpan
+    password: 72D5cmAeKxnseDxi
+    url: jdbc:mysql://192.168.3.1:3306/rpan?characterEncoding=utf8&serverTimezone=GMT%2B8&useSSL=false&allowPublicKeyRetrieval=true
+    driver-class-name: com.mysql.cj.jdbc.Driver
+mybatis-plus:
+  mapper-locations: classpath:mappers/**/*.xml
 #  redis:
 #    database: 1
 #    host: 127.0.0.1
@@ -27,14 +33,7 @@ spring:
 #    multipart:
 #      max-file-size: 3072MB
 #      max-request-size: 3072MB
-##  datasource:
-##    username: root
-##    password: 123456
-##    url: jdbc:mysql://127.0.0.1:3306/r_pan?characterEncoding=utf8&serverTimezone=GMT%2B8&useSSL=false&allowPublicKeyRetrieval=true
-##    driver-class-name: com.mysql.cj.jdbc.Driver
-#
-#mybatis-plus:
-#  mapper-locations: classpath:mappers/**/*.xml
+
 #
 #server:
 #  port: 8080
