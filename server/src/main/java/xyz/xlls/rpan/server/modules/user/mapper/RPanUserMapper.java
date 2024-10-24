@@ -12,7 +12,3 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 public interface RPanUserMapper extends BaseMapper<RPanUser> {
 
 }
-
-
-
-
