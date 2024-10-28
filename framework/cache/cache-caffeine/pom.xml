@@ -5,21 +5,30 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>xyz.xlls.rpan</groupId>
-        <artifactId>framework</artifactId>
+        <artifactId>r-pan-cache</artifactId>
         <version>1.0</version>
     </parent>
 
-    <artifactId>r-pan-cache</artifactId>
-    <packaging>pom</packaging>
-    <modules>
-        <module>cache-core</module>
-        <module>cache-caffeine</module>
-    </modules>
+    <artifactId>r-pan-cache-caffeine</artifactId>
 
     <properties>
         <maven.compiler.source>8</maven.compiler.source>
         <maven.compiler.target>8</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
-
+    <dependencies>
+        <dependency>
+            <groupId>xyz.xlls.rpan</groupId>
+            <artifactId>r-pan-cache-core</artifactId>
+            <version>1.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-configuration-processor</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.github.ben-manes.caffeine</groupId>
+            <artifactId>caffeine</artifactId>
+        </dependency>
+    </dependencies>
 </project>
