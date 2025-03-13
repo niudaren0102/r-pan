@@ -30,15 +30,16 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-devtools</artifactId>
-                 </dependency>
+        </dependency>
         <dependency>
             <groupId>xyz.xlls.rpan</groupId>
             <artifactId>r-pan-mybatis-plus</artifactId>
             <version>1.0</version>
         </dependency>
         <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-devtools</artifactId>
+            <groupId>xyz.xlls.rpan</groupId>
+            <artifactId>r-pan-schedule</artifactId>
+            <version>1.0</version>
         </dependency>
     </dependencies>
     <build>

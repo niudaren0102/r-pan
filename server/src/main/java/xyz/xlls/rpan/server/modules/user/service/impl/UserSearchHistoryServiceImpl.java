@@ -2,7 +2,7 @@ package xyz.xlls.rpan.server.modules.user.service.impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import xyz.xlls.rpan.server.modules.user.entity.RPanUserSearchHistory;
-import xyz.xlls.rpan.server.modules.user.service.RPanUserSearchHistoryService;
+import xyz.xlls.rpan.server.modules.user.service.IUserSearchHistoryService;
 import xyz.xlls.rpan.server.modules.user.mapper.RPanUserSearchHistoryMapper;
 import org.springframework.stereotype.Service;
 
@@ -12,8 +12,8 @@ import org.springframework.stereotype.Service;
 * @createDate 2024-10-22 14:59:10
 */
 @Service
-public class RPanUserSearchHistoryServiceImpl extends ServiceImpl<RPanUserSearchHistoryMapper, RPanUserSearchHistory>
-    implements RPanUserSearchHistoryService{
+public class UserSearchHistoryServiceImpl extends ServiceImpl<RPanUserSearchHistoryMapper, RPanUserSearchHistory>
+    implements IUserSearchHistoryService {
 
 }
 

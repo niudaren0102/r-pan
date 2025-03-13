@@ -16,18 +16,10 @@ import javax.validation.constraints.NotBlank;
 
 @SpringBootApplication(scanBasePackages = RPanConstants.BASE_COMPONENT_SCAN_PATH)
 @ServletComponentScan(basePackages= RPanConstants.BASE_COMPONENT_SCAN_PATH)
-@RestController
-@Api("测试接口类")
-@Validated
 @EnableTransactionManagement
 @MapperScan(basePackages = RPanConstants.BASE_COMPONENT_SCAN_PATH+".server.modules.**.mapper")
 public class RPanServerLauncher {
     public static void main(String[] args) {
         SpringApplication.run(RPanServerLauncher.class);
-    }
-    @GetMapping("/hello")
-    public R<String> hello(@NotBlank(message = "name不能为空") String name){
-        System.out.println(Thread.currentThread().getContextClassLoader());
-        return R.success("hello"+name);
     }
 }

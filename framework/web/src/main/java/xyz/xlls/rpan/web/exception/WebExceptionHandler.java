@@ -7,6 +7,7 @@ import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import xyz.xlls.rpan.core.exception.RPanBusinessException;
+import xyz.xlls.rpan.core.exception.RPanFrameworkException;
 import xyz.xlls.rpan.core.response.R;
 import xyz.xlls.rpan.core.response.ResponseCode;
 
@@ -47,6 +48,10 @@ public class WebExceptionHandler {
     public R bindExceptionHandler(BindException e){
         ObjectError objectError = e.getBindingResult().getAllErrors().stream().findFirst().get();
         return R.fail(ResponseCode.ERROR_PARAM.getCode(),objectError.getDefaultMessage());
+    }
+    @ExceptionHandler(value = RPanFrameworkException.class)
+    public R rPanFrameworkExceptionHandler(RPanFrameworkException e){
+        return R.fail(ResponseCode.ERROR.getCode(),e.getMessage());
     }
     @ExceptionHandler(value = RuntimeException.class)
     public R runtimeExceptionHandler(RuntimeException e){

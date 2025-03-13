@@ -13,8 +13,8 @@ spring:
       max-request-size: 3072MB #上传文件大小和请求大小
   datasource:
     username: rpan
-    password: XmYkNT5hMMQcyBbi
-    url: jdbc:mysql://113.44.201.198:13306/rpan?characterEncoding=utf8&serverTimezone=GMT%2B8&useSSL=false&allowPublicKeyRetrieval=true
+    password: 123123
+    url: jdbc:mysql://sd.kk.com:3306/rpan?characterEncoding=utf8&serverTimezone=GMT%2B8&useSSL=false&allowPublicKeyRetrieval=true
     driver-class-name: com.mysql.cj.jdbc.Driver
 mybatis-plus:
   mapper-locations: classpath:mappers/**/*.xml
