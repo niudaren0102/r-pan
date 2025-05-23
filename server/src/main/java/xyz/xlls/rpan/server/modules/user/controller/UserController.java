@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import xyz.xlls.rpan.core.response.R;
 import xyz.xlls.rpan.core.utils.IdUtil;
+import xyz.xlls.rpan.server.common.utils.UserIdUtil;
 import xyz.xlls.rpan.server.modules.user.context.UserLoginContext;
 import xyz.xlls.rpan.server.modules.user.context.UserRegisterContext;
 import xyz.xlls.rpan.server.modules.user.converter.UserConverter;
@@ -53,5 +54,17 @@ public class UserController {
         UserLoginContext userLoginContext = userConverter.userLoginPO2UserLoginContext(userRegisterPO);
         String accessToken=userService.login(userLoginContext);
         return R.data(accessToken);
+    }
+
+    @ApiOperation(
+            value = "用户登出接口",
+            notes = "该模块提供了用户登出的功能",
+            consumes = MediaType.APPLICATION_JSON_UTF8_VALUE,
+            produces = MediaType.APPLICATION_JSON_UTF8_VALUE
+    )
+    @PostMapping("exit")
+    public R exit(){
+        userService.exit(UserIdUtil.get());
+        return R.success();
     }
 }

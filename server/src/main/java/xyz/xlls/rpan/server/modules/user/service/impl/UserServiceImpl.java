@@ -82,6 +82,22 @@ public class UserServiceImpl extends ServiceImpl<RPanUserMapper, RPanUser>
     }
 
     /**
+     * 用户退出登录
+     * 1、清空用户的登录凭证缓存
+     * @param userId
+     */
+    @Override
+    public void exit(Long userId) {
+        try{
+            Cache cache = cacheManager.getCache(CacheConstants.R_PAN_CACHE_NAME);
+            cache.evict(UserConstants.USER_LOGIN_PREFIX + userId);
+        }catch (Exception e){
+            e.printStackTrace();
+            throw new RPanBusinessException("用户退出登录失败");
+        }
+    }
+
+    /**
      * 生成并保存登录之后的凭证
      *
      * @param userLoginContext

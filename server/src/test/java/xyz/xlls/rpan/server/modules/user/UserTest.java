@@ -10,7 +10,9 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.transaction.annotation.Transactional;
 import xyz.xlls.rpan.core.exception.RPanBusinessException;
+import xyz.xlls.rpan.core.utils.JwtUtil;
 import xyz.xlls.rpan.server.RPanServerLauncher;
+import xyz.xlls.rpan.server.modules.user.constants.UserConstants;
 import xyz.xlls.rpan.server.modules.user.context.UserLoginContext;
 import xyz.xlls.rpan.server.modules.user.context.UserRegisterContext;
 import xyz.xlls.rpan.server.modules.user.service.IUserService;
@@ -84,6 +86,22 @@ public class UserTest {
         userLoginContext.setPassword(userLoginContext.getPassword()+"_change");
         String accessToken = userService.login(userLoginContext);
     }
+
+    /**
+     *
+     */
+    @Test(expected = RPanBusinessException.class)
+    public void testExitSuccess() {
+        UserRegisterContext context = createUserRegisterContext();
+        Long register = userService.register(context);
+        Assert.isTrue(register >0L);
+        UserLoginContext userLoginContext=new UserLoginContext();
+        String accessToken = userService.login(userLoginContext);
+        Assert.isTrue(StringUtils.isNotBlank(accessToken));
+        Long userId=(Long) JwtUtil.analyzeToken(accessToken, UserConstants.LOGIN_USER_ID);
+        userService.exit(userId);
+    }
+
     /**
      * 构建注册用户上下文信息
      * @return
