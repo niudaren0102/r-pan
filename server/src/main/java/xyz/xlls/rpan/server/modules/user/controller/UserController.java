@@ -11,8 +11,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import xyz.xlls.rpan.core.response.R;
 import xyz.xlls.rpan.core.utils.IdUtil;
+import xyz.xlls.rpan.server.modules.user.context.UserLoginContext;
 import xyz.xlls.rpan.server.modules.user.context.UserRegisterContext;
 import xyz.xlls.rpan.server.modules.user.converter.UserConverter;
+import xyz.xlls.rpan.server.modules.user.po.UserLoginPO;
 import xyz.xlls.rpan.server.modules.user.po.UserRegisterPO;
 import xyz.xlls.rpan.server.modules.user.service.IUserService;
 
@@ -38,5 +40,18 @@ public class UserController {
         UserRegisterContext userRegisterContext = userConverter.registerPO2UserRegisterContext(userRegisterPO);
         Long userId= userService.register(userRegisterContext);
         return R.data(IdUtil.encrypt(userId));
+    }
+
+    @ApiOperation(
+            value = "用户登陆接口",
+            notes = "该模块提供了用户登陆的功能，成功登陆之后，会返回有时效性的accessToken供后续服务使用",
+            consumes = MediaType.APPLICATION_JSON_UTF8_VALUE,
+            produces = MediaType.APPLICATION_JSON_UTF8_VALUE
+    )
+    @PostMapping("login")
+    public R login(@Validated @RequestBody UserLoginPO userRegisterPO){
+        UserLoginContext userLoginContext = userConverter.userLoginPO2UserLoginContext(userRegisterPO);
+        String accessToken=userService.login(userLoginContext);
+        return R.data(accessToken);
     }
 }

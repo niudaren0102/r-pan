@@ -14,13 +14,15 @@ spring:
   datasource:
     username: rpan
     password: 123123
-    url: jdbc:mysql://sd.kk.com:3306/rpan?characterEncoding=utf8&serverTimezone=GMT%2B8&useSSL=false&allowPublicKeyRetrieval=true
+    url: jdbc:mysql://db.kk.com:3306/rpan?characterEncoding=utf8&serverTimezone=GMT%2B8&useSSL=false&allowPublicKeyRetrieval=true
     driver-class-name: com.mysql.cj.jdbc.Driver
+  redis:
+    database: 1
+    host: db.kk.com
+    password: 123123
 mybatis-plus:
   mapper-locations: classpath:mappers/**/*.xml
-#  redis:
-#    database: 1
-#    host: 127.0.0.1
+
 #  application:
 #    name: r-pan-server
 #  output:

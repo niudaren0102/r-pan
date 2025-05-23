@@ -1,15 +1,22 @@
 package xyz.xlls.rpan.server.modules.user.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
 import org.springframework.dao.DuplicateKeyException;
+import xyz.xlls.rpan.cache.core.constants.CacheConstants;
 import xyz.xlls.rpan.core.exception.RPanBusinessException;
 import xyz.xlls.rpan.core.response.ResponseCode;
 import xyz.xlls.rpan.core.utils.IdUtil;
+import xyz.xlls.rpan.core.utils.JwtUtil;
 import xyz.xlls.rpan.core.utils.PasswordUtil;
 import xyz.xlls.rpan.server.modules.file.constants.FileConstants;
 import xyz.xlls.rpan.server.modules.file.context.CreateFolderContext;
 import xyz.xlls.rpan.server.modules.file.service.IUserFileService;
+import xyz.xlls.rpan.server.modules.user.constants.UserConstants;
+import xyz.xlls.rpan.server.modules.user.context.UserLoginContext;
 import xyz.xlls.rpan.server.modules.user.context.UserRegisterContext;
 import xyz.xlls.rpan.server.modules.user.converter.UserConverter;
 import xyz.xlls.rpan.server.modules.user.entity.RPanUser;
@@ -32,6 +39,8 @@ public class UserServiceImpl extends ServiceImpl<RPanUserMapper, RPanUser>
     private UserConverter userConverter;
     @Autowired
     private IUserFileService userFileService;
+    @Autowired
+    private CacheManager cacheManager;
     /**
      * 用户注册的业务实现
      * 需要实现的功能点
@@ -53,6 +62,67 @@ public class UserServiceImpl extends ServiceImpl<RPanUserMapper, RPanUser>
         doRegister(userRegisterContext);
         createUserRootFolder(userRegisterContext);
         return userRegisterContext.getEntity().getUserId();
+    }
+
+    /**
+     * 用户登陆业务实现
+     * 需要实现的功能：
+     * 1、用户的登录信息校验
+     * 2、生成一个具有实效性的accessToken
+     * 3、将accessToken缓存起来、去实现单机登录
+     *
+     * @param userLoginContext
+     * @return
+     */
+    @Override
+    public String login(UserLoginContext userLoginContext) {
+        checkLoginInfo(userLoginContext);
+        generateAndSaveAccessToken(userLoginContext);
+        return userLoginContext.getAccessToken();
+    }
+
+    /**
+     * 生成并保存登录之后的凭证
+     *
+     * @param userLoginContext
+     */
+    private void generateAndSaveAccessToken(UserLoginContext userLoginContext) {
+        RPanUser entity = userLoginContext.getEntity();
+        String accessToken = JwtUtil.generateToken(entity.getUsername(), UserConstants.LOGIN_USER_ID, entity.getUserId(), UserConstants.ONE_DAY_LONG);
+        Cache cache = cacheManager.getCache(CacheConstants.R_PAN_CACHE_NAME);
+        cache.put(UserConstants.USER_LOGIN_PREFIX, accessToken);
+        userLoginContext.setAccessToken(accessToken);
+    }
+
+    /**
+     * 校验用户名密码
+     * @param userLoginContext
+     */
+    private void checkLoginInfo(UserLoginContext userLoginContext) {
+        String username = userLoginContext.getUsername();
+        String password = userLoginContext.getPassword();
+        RPanUser entity=getRPanUserByUsername(username);
+        if(Objects.isNull(entity)){
+            throw new RPanBusinessException("用户名不存在");
+        }
+        String salt = entity.getSalt();
+        String encryptPassword = PasswordUtil.encryptPassword(salt, password);
+        String dbPassword=entity.getPassword();
+        if(Objects.equals(encryptPassword,dbPassword)){
+            throw new RPanBusinessException("密码信息不正确");
+        }
+        userLoginContext.setEntity(entity);
+    }
+
+    /**
+     * 根据用户名获取用户实体信息
+     * @param username
+     * @return
+     */
+    private RPanUser getRPanUserByUsername(String username) {
+        LambdaQueryWrapper<RPanUser> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(RPanUser::getUsername, username);
+        return getOne(queryWrapper);
     }
 
     /**

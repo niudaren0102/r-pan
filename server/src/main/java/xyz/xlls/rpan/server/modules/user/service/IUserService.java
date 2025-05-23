@@ -1,5 +1,6 @@
 package xyz.xlls.rpan.server.modules.user.service;
 
+import xyz.xlls.rpan.server.modules.user.context.UserLoginContext;
 import xyz.xlls.rpan.server.modules.user.context.UserRegisterContext;
 import xyz.xlls.rpan.server.modules.user.entity.RPanUser;
 import com.baomidou.mybatisplus.extension.service.IService;
@@ -16,4 +17,11 @@ public interface IUserService extends IService<RPanUser> {
      * @return
      */
     Long register(UserRegisterContext userRegisterContext);
+
+    /**
+     * 用户登陆业务
+     * @param userLoginContext
+     * @return
+     */
+    String login(UserLoginContext userLoginContext);
 }
