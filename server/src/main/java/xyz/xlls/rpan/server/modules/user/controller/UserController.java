@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import xyz.xlls.rpan.core.response.R;
 import xyz.xlls.rpan.core.utils.IdUtil;
+import xyz.xlls.rpan.server.common.annotation.LoginIgnore;
 import xyz.xlls.rpan.server.common.utils.UserIdUtil;
 import xyz.xlls.rpan.server.modules.user.context.UserLoginContext;
 import xyz.xlls.rpan.server.modules.user.context.UserRegisterContext;
@@ -36,6 +37,7 @@ public class UserController {
             consumes = MediaType.APPLICATION_JSON_UTF8_VALUE,
             produces = MediaType.APPLICATION_JSON_UTF8_VALUE
     )
+    @LoginIgnore
     @PostMapping("register")
     public R register(@Validated @RequestBody UserRegisterPO userRegisterPO){
         UserRegisterContext userRegisterContext = userConverter.registerPO2UserRegisterContext(userRegisterPO);
@@ -50,8 +52,9 @@ public class UserController {
             produces = MediaType.APPLICATION_JSON_UTF8_VALUE
     )
     @PostMapping("login")
-    public R login(@Validated @RequestBody UserLoginPO userRegisterPO){
-        UserLoginContext userLoginContext = userConverter.userLoginPO2UserLoginContext(userRegisterPO);
+    @LoginIgnore
+    public R login(@Validated @RequestBody UserLoginPO userLoginPO){
+        UserLoginContext userLoginContext = userConverter.userLoginPO2UserLoginContext(userLoginPO);
         String accessToken=userService.login(userLoginContext);
         return R.data(accessToken);
     }

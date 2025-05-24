@@ -124,7 +124,7 @@ public class UserServiceImpl extends ServiceImpl<RPanUserMapper, RPanUser>
         String salt = entity.getSalt();
         String encryptPassword = PasswordUtil.encryptPassword(salt, password);
         String dbPassword=entity.getPassword();
-        if(Objects.equals(encryptPassword,dbPassword)){
+        if(!Objects.equals(encryptPassword,dbPassword)){
             throw new RPanBusinessException("密码信息不正确");
         }
         userLoginContext.setEntity(entity);
