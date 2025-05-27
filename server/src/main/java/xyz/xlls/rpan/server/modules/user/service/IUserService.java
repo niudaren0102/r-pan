@@ -49,4 +49,10 @@ public interface IUserService extends IService<RPanUser> {
      * @param resetPasswordContext
      */
     void resetPassword(ResetPasswordContext resetPasswordContext);
+
+    /**
+     * 在线修改密码
+     * @param changePasswordContext
+     */
+    void changePassword(ChangePasswordContext changePasswordContext);
 }

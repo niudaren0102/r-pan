@@ -142,6 +142,65 @@ public class UserServiceImpl extends ServiceImpl<RPanUserMapper, RPanUser>
     }
 
     /**
+     *  在线修改密码
+     *  1、校验旧密码
+     *  2、重置新密码
+     *  3、退出当前的登录状态
+     * @param changePasswordContext
+     */
+    @Override
+    public void changePassword(ChangePasswordContext changePasswordContext) {
+        checkOldPassword(changePasswordContext);
+        doChangePassword(changePasswordContext);
+        exitLoginStatus(changePasswordContext);
+    }
+
+    /**
+     * 退出用户的登录状态
+     * @param changePasswordContext
+     */
+    private void exitLoginStatus(ChangePasswordContext changePasswordContext) {
+        this.exit(changePasswordContext.getUserId());
+    }
+
+    /**
+     * 修改新密码
+     * @param changePasswordContext
+     */
+    private void doChangePassword(ChangePasswordContext changePasswordContext) {
+        String newPassword = changePasswordContext.getNewPassword();
+        RPanUser entity = changePasswordContext.getEntity();
+        String salt = entity.getSalt();
+        String encryptNewPassword = PasswordUtil.encryptPassword(salt,newPassword);
+        entity.setPassword(encryptNewPassword);
+        entity.setUpdateTime(new Date());
+        boolean result = this.updateById(entity);
+        if(!result){
+            throw new RPanBusinessException("修改用户密码失败");
+        }
+    }
+
+    /**
+     * 校验用户的旧密码
+     * 该步骤会查询并封装用户的实体信息到上下文对象中
+     * @param changePasswordContext
+     */
+    private void checkOldPassword(ChangePasswordContext changePasswordContext) {
+        Long userId = changePasswordContext.getUserId();
+        String oldPassword = changePasswordContext.getOldPassword();
+        RPanUser entity = this.getById(userId);
+        if(Objects.isNull(entity)){
+            throw new RPanBusinessException("用户信息不存在");
+        }
+        changePasswordContext.setEntity(entity);
+        String encryptedOldPassword = PasswordUtil.encryptPassword(entity.getSalt(),  oldPassword);
+        String dbEncryptedPassword = entity.getPassword();
+        if(!Objects.equals(encryptedOldPassword,dbEncryptedPassword)){
+            throw new RPanBusinessException("旧密码不正确");
+        }
+    }
+
+    /**
      * 校验用户信息并重置密码
      * @param resetPasswordContext
      */

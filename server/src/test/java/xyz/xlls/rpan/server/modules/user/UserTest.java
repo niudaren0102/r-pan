@@ -201,6 +201,36 @@ public class UserTest {
         userService.resetPassword(resetPasswordContext);
     }
     /**
+     * 正常在线修改密码
+     */
+    @Test
+    public void changePasswordSuccess(){
+        UserRegisterContext context = createUserRegisterContext();
+        Long register = userService.register(context);
+        Assert.isTrue(register >0L);
+        ChangePasswordContext changePasswordContext=new ChangePasswordContext();
+        changePasswordContext.setUserId(register);
+        changePasswordContext.setOldPassword("123456");
+        changePasswordContext.setNewPassword("123456_changed");
+        userService.changePassword(changePasswordContext);
+    }
+
+    /**
+     * 修改密码失败-旧密码错误
+     */
+    @Test(expected = RPanBusinessException.class)
+    public void changePasswordFailByWrongOldPassword(){
+        UserRegisterContext context = createUserRegisterContext();
+        Long register = userService.register(context);
+        Assert.isTrue(register >0L);
+        ChangePasswordContext changePasswordContext=new ChangePasswordContext();
+        changePasswordContext.setUserId(register);
+        changePasswordContext.setOldPassword("123456_changed");
+        changePasswordContext.setNewPassword("123456_changed");
+        userService.changePassword(changePasswordContext);
+    }
+
+    /**
      * 构建注册用户上下文信息
      * @return
      */

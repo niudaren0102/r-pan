@@ -21,6 +21,7 @@ public class ResetPasswordPO implements Serializable {
     @NotBlank(message = "用户名不能为空")
     @Pattern(regexp = "^[0-9A-Za-z]{6,16}$",message = "请输入6-16位只包含数字和字母的用户名")
     private String username;
+    @ApiModelProperty(value = "密码",required = true)
     @NotBlank(message = "密码不能为空")
     @Length(min = 8,max = 16,message = "请输入8-16位密码")
     private String password;

@@ -107,4 +107,17 @@ public class UserController {
         userService.resetPassword(resetPasswordContext);
         return R.success();
     }
+    @ApiOperation(
+            value = "用户在线修改密码",
+            notes = "该模块提供了用户在线修改密码的功能",
+            consumes = MediaType.APPLICATION_JSON_UTF8_VALUE,
+            produces = MediaType.APPLICATION_JSON_UTF8_VALUE
+    )
+    @PostMapping("/password/change")
+    public R changePassword(@RequestBody @Validated ChangePasswordPO changePasswordPO){
+        ChangePasswordContext changePasswordContext = userConverter.changePasswordPO2ChangePasswordContext(changePasswordPO);
+        changePasswordContext.setUserId(UserIdUtil.get());
+        userService.changePassword(changePasswordContext);
+        return R.success();
+    }
 }
