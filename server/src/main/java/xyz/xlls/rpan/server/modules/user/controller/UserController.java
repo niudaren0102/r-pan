@@ -5,10 +5,7 @@ import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import xyz.xlls.rpan.core.response.R;
 import xyz.xlls.rpan.core.utils.IdUtil;
 import xyz.xlls.rpan.server.common.annotation.LoginIgnore;
@@ -17,6 +14,7 @@ import xyz.xlls.rpan.server.modules.user.context.*;
 import xyz.xlls.rpan.server.modules.user.converter.UserConverter;
 import xyz.xlls.rpan.server.modules.user.po.*;
 import xyz.xlls.rpan.server.modules.user.service.IUserService;
+import xyz.xlls.rpan.server.modules.user.vo.UserInfoVO;
 
 /**
  * 该类是用户模块的控制器实体
@@ -119,5 +117,16 @@ public class UserController {
         changePasswordContext.setUserId(UserIdUtil.get());
         userService.changePassword(changePasswordContext);
         return R.success();
+    }
+    @ApiOperation(
+            value = "查询用户登录的基本信息",
+            notes = "该模块提供了查询用户登录的基本信息的功能",
+            consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE,
+            produces = MediaType.APPLICATION_JSON_UTF8_VALUE
+    )
+    @GetMapping("/")
+    public R<UserInfoVO> info(){
+       UserInfoVO userInfoVO=userService.info(UserIdUtil.get());
+       return R.data(userInfoVO);
     }
 }

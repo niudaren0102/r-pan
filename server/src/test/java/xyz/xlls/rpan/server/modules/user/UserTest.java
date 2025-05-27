@@ -15,6 +15,7 @@ import xyz.xlls.rpan.server.RPanServerLauncher;
 import xyz.xlls.rpan.server.modules.user.constants.UserConstants;
 import xyz.xlls.rpan.server.modules.user.context.*;
 import xyz.xlls.rpan.server.modules.user.service.IUserService;
+import xyz.xlls.rpan.server.modules.user.vo.UserInfoVO;
 
 /**
  * 用户模块单元测试类
@@ -213,6 +214,14 @@ public class UserTest {
         changePasswordContext.setOldPassword("123456");
         changePasswordContext.setNewPassword("123456_changed");
         userService.changePassword(changePasswordContext);
+    }
+    @Test
+    public void testQueryUserInfo(){
+        UserRegisterContext context = createUserRegisterContext();
+        Long register = userService.register(context);
+        Assert.isTrue(register >0L);
+        UserInfoVO info = userService.info(register);
+        Assert.notNull(info);
     }
 
     /**

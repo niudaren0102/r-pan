@@ -3,6 +3,7 @@ package xyz.xlls.rpan.server.modules.user.service;
 import xyz.xlls.rpan.server.modules.user.context.*;
 import xyz.xlls.rpan.server.modules.user.entity.RPanUser;
 import com.baomidou.mybatisplus.extension.service.IService;
+import xyz.xlls.rpan.server.modules.user.vo.UserInfoVO;
 
 /**
 * @author Administrator
@@ -55,4 +56,11 @@ public interface IUserService extends IService<RPanUser> {
      * @param changePasswordContext
      */
     void changePassword(ChangePasswordContext changePasswordContext);
+
+    /**
+     * 查询在线用户的基本信息
+     * @param userId
+     * @return
+     */
+    UserInfoVO info(Long userId);
 }

@@ -15,6 +15,7 @@ import xyz.xlls.rpan.core.utils.JwtUtil;
 import xyz.xlls.rpan.core.utils.PasswordUtil;
 import xyz.xlls.rpan.server.modules.file.constants.FileConstants;
 import xyz.xlls.rpan.server.modules.file.context.CreateFolderContext;
+import xyz.xlls.rpan.server.modules.file.entity.RPanUserFile;
 import xyz.xlls.rpan.server.modules.file.service.IUserFileService;
 import xyz.xlls.rpan.server.modules.user.constants.UserConstants;
 import xyz.xlls.rpan.server.modules.user.context.*;
@@ -23,6 +24,7 @@ import xyz.xlls.rpan.server.modules.user.entity.RPanUser;
 import xyz.xlls.rpan.server.modules.user.service.IUserService;
 import xyz.xlls.rpan.server.modules.user.mapper.RPanUserMapper;
 import org.springframework.stereotype.Service;
+import xyz.xlls.rpan.server.modules.user.vo.UserInfoVO;
 
 import java.util.Date;
 import java.util.Objects;
@@ -153,6 +155,36 @@ public class UserServiceImpl extends ServiceImpl<RPanUserMapper, RPanUser>
         checkOldPassword(changePasswordContext);
         doChangePassword(changePasswordContext);
         exitLoginStatus(changePasswordContext);
+    }
+
+    /**
+     * 查询在线用户的基本信息
+     * 1、查询用户的基本信息实体
+     * 2、查询用户的根文件夹信息
+     * 3、拼装VO对象返回
+     * @param userId
+     * @return
+     */
+    @Override
+    public UserInfoVO info(Long userId) {
+        RPanUser entity = this.getById(userId);
+        if(Objects.isNull(entity)){
+            throw new RPanBusinessException("用户信息查询失败");
+        }
+        RPanUserFile rPanUserFile=getUserRootFileInfo(userId);
+        if(Objects.isNull(rPanUserFile)){
+            throw new RPanBusinessException("查询用户跟文件夹信息失败");
+        }
+        return userConverter.assembleUserInfoVO(entity,rPanUserFile);
+    }
+
+    /**
+     * 获取用户根目录信息
+     * @param userId
+     * @return
+     */
+    private RPanUserFile getUserRootFileInfo(Long userId) {
+        return userFileService.getUserRootFile(userId);
     }
 
     /**

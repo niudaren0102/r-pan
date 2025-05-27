@@ -42,6 +42,16 @@ public class UserFileServiceImpl extends ServiceImpl<RPanUserFileMapper, RPanUse
                 context.getUserId(),
                 null);
     }
+
+    @Override
+    public RPanUserFile getUserRootFile(Long userId) {
+        LambdaQueryWrapper<RPanUserFile> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(RPanUserFile::getUserId, userId);
+        queryWrapper.eq(RPanUserFile::getParentId,FileConstants.TOP_PARENT_ID);
+        queryWrapper.eq(RPanUserFile::getDelFlag,DelFlagEnum.NO.getCode());
+        queryWrapper.eq(RPanUserFile::getFolderFlag,FolderFlagEnum.YES);
+        return this.getOne(queryWrapper);
+    }
     /****************************private****************************/
     /**
      * 保存用户文件的映射记录
