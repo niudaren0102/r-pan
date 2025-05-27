@@ -3,11 +3,9 @@ package xyz.xlls.rpan.server.modules.user.converter;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingConstants;
-import xyz.xlls.rpan.server.modules.user.context.UserLoginContext;
-import xyz.xlls.rpan.server.modules.user.context.UserRegisterContext;
+import xyz.xlls.rpan.server.modules.user.context.*;
 import xyz.xlls.rpan.server.modules.user.entity.RPanUser;
-import xyz.xlls.rpan.server.modules.user.po.UserLoginPO;
-import xyz.xlls.rpan.server.modules.user.po.UserRegisterPO;
+import xyz.xlls.rpan.server.modules.user.po.*;
 
 /**
  * 用户
@@ -35,4 +33,25 @@ public interface UserConverter {
      * @return
      */
     UserLoginContext userLoginPO2UserLoginContext(UserLoginPO userLoginPO);
+
+    /**
+     * CheckUsernamePO转CheckUsernameContext
+     * @param checkUsernamePO
+     * @return
+     */
+    CheckUsernameContext checkUsernamePO2CheckUsernameContext(CheckUsernamePO checkUsernamePO);
+
+    /**
+     * CheckAnswerPO转checkAnswerContext
+     * @param checkAnswerPO
+     * @return
+     */
+    CheckAnswerContext checkAnswerPO2CheckAnswerContext(CheckAnswerPO checkAnswerPO);
+
+    /**
+     * ResetPasswordPO转ResetPasswordContext
+     * @param resetPasswordPO
+     * @return
+     */
+    ResetPasswordContext resetPasswordPO2ResetPasswordContext(ResetPasswordPO resetPasswordPO);
 }

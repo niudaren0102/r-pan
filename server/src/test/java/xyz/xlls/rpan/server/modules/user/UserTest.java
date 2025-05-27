@@ -13,8 +13,7 @@ import xyz.xlls.rpan.core.exception.RPanBusinessException;
 import xyz.xlls.rpan.core.utils.JwtUtil;
 import xyz.xlls.rpan.server.RPanServerLauncher;
 import xyz.xlls.rpan.server.modules.user.constants.UserConstants;
-import xyz.xlls.rpan.server.modules.user.context.UserLoginContext;
-import xyz.xlls.rpan.server.modules.user.context.UserRegisterContext;
+import xyz.xlls.rpan.server.modules.user.context.*;
 import xyz.xlls.rpan.server.modules.user.service.IUserService;
 
 /**
@@ -88,7 +87,7 @@ public class UserTest {
     }
 
     /**
-     *
+     * 测试登录失败
      */
     @Test(expected = RPanBusinessException.class)
     public void testExitSuccess() {
@@ -102,6 +101,105 @@ public class UserTest {
         userService.exit(userId);
     }
 
+    /**
+     * 校验用户名称通过
+     */
+    @Test
+    public void checkUsernameSuccess() {
+        UserRegisterContext context = createUserRegisterContext();
+        Long register = userService.register(context);
+        Assert.isTrue(register >0L);
+        CheckUsernameContext usernameContext=new CheckUsernameContext();
+        usernameContext.setUsername("admin");
+        String question = userService.checkUsername(usernameContext);
+        Assert.isTrue(StringUtils.isNotBlank(question));
+    }
+
+    /**
+     * 校验用户名称失败-没有找到该用户
+     */
+    @Test(expected = RPanBusinessException.class)
+    public void checkUsernameNotExist() {
+        UserRegisterContext context = createUserRegisterContext();
+        Long register = userService.register(context);
+        Assert.isTrue(register >0L);
+        CheckUsernameContext usernameContext=new CheckUsernameContext();
+        usernameContext.setUsername("admin_changed");
+        String question = userService.checkUsername(usernameContext);
+        Assert.isTrue(StringUtils.isBlank(question));
+    }
+
+    /**
+     * 校验用户名称通过
+     */
+    @Test
+    public void checkAnswerSuccess() {
+        UserRegisterContext context = createUserRegisterContext();
+        Long register = userService.register(context);
+        Assert.isTrue(register >0L);
+        CheckAnswerContext checkAnswerContext=new CheckAnswerContext();
+        checkAnswerContext.setUsername("admin");
+        checkAnswerContext.setQuestion("test");
+        checkAnswerContext.setAnswer("test");
+        String token=userService.checkAnswer(checkAnswerContext);
+        Assert.isTrue(StringUtils.isNotBlank(token));
+    }
+
+    /**
+     * 校验用户名称失败-没有找到该用户
+     */
+    @Test(expected = RPanBusinessException.class)
+    public void checkAnswerFail() {
+        UserRegisterContext context = createUserRegisterContext();
+        Long register = userService.register(context);
+        Assert.isTrue(register >0L);
+        CheckAnswerContext checkAnswerContext=new CheckAnswerContext();
+        checkAnswerContext.setUsername("admin");
+        checkAnswerContext.setQuestion("test");
+        checkAnswerContext.setAnswer("test_changed");
+        String token=userService.checkAnswer(checkAnswerContext);
+        Assert.isTrue(StringUtils.isNotBlank(token));
+    }
+
+    /**
+     * 正常重置用户密码
+     */
+    @Test
+    public void resetPasswordSuccess(){
+        UserRegisterContext context = createUserRegisterContext();
+        Long register = userService.register(context);
+        Assert.isTrue(register >0L);
+        CheckAnswerContext checkAnswerContext=new CheckAnswerContext();
+        checkAnswerContext.setUsername("admin");
+        checkAnswerContext.setQuestion("test");
+        checkAnswerContext.setAnswer("test");
+        String token=userService.checkAnswer(checkAnswerContext);
+        ResetPasswordContext resetPasswordContext=new ResetPasswordContext();
+        resetPasswordContext.setUsername("admin");
+        resetPasswordContext.setPassword("123456_changed");
+        resetPasswordContext.setToken(token);
+        userService.resetPassword(resetPasswordContext);
+    }
+
+    /**
+     * 用户重置密码失败-token异常
+     */
+    @Test(expected = RPanBusinessException.class)
+    public void resetPasswordTokenError(){
+        UserRegisterContext context = createUserRegisterContext();
+        Long register = userService.register(context);
+        Assert.isTrue(register >0L);
+        CheckAnswerContext checkAnswerContext=new CheckAnswerContext();
+        checkAnswerContext.setUsername("admin");
+        checkAnswerContext.setQuestion("test");
+        checkAnswerContext.setAnswer("test");
+        String token=userService.checkAnswer(checkAnswerContext);
+        ResetPasswordContext resetPasswordContext=new ResetPasswordContext();
+        resetPasswordContext.setUsername("admin");
+        resetPasswordContext.setPassword("123456_changed");
+        resetPasswordContext.setToken(token+"_changed");
+        userService.resetPassword(resetPasswordContext);
+    }
     /**
      * 构建注册用户上下文信息
      * @return
@@ -127,4 +225,5 @@ public class UserTest {
         return context;
 
     }
+
 }

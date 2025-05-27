@@ -13,11 +13,9 @@ import xyz.xlls.rpan.core.response.R;
 import xyz.xlls.rpan.core.utils.IdUtil;
 import xyz.xlls.rpan.server.common.annotation.LoginIgnore;
 import xyz.xlls.rpan.server.common.utils.UserIdUtil;
-import xyz.xlls.rpan.server.modules.user.context.UserLoginContext;
-import xyz.xlls.rpan.server.modules.user.context.UserRegisterContext;
+import xyz.xlls.rpan.server.modules.user.context.*;
 import xyz.xlls.rpan.server.modules.user.converter.UserConverter;
-import xyz.xlls.rpan.server.modules.user.po.UserLoginPO;
-import xyz.xlls.rpan.server.modules.user.po.UserRegisterPO;
+import xyz.xlls.rpan.server.modules.user.po.*;
 import xyz.xlls.rpan.server.modules.user.service.IUserService;
 
 /**
@@ -68,6 +66,45 @@ public class UserController {
     @PostMapping("exit")
     public R exit(){
         userService.exit(UserIdUtil.get());
+        return R.success();
+    }
+    @ApiOperation(
+            value = "用户忘记密码-校验用户名",
+            notes = "该模块提供了用户忘记密码-校验用户名的功能",
+            consumes = MediaType.APPLICATION_JSON_UTF8_VALUE,
+            produces = MediaType.APPLICATION_JSON_UTF8_VALUE
+    )
+    @LoginIgnore
+    @PostMapping("username/check")
+    public  R checkUsername(@Validated @RequestBody CheckUsernamePO checkUsernamePO){
+        CheckUsernameContext checkUsernameContext=userConverter.checkUsernamePO2CheckUsernameContext(checkUsernamePO);
+        String question=userService.checkUsername(checkUsernameContext);
+        return R.data(question);
+    }
+    @ApiOperation(
+            value = "用户忘记密码-校验密保答案",
+            notes = "该模块提供了用户忘记密码-校验密保答案的功能",
+            consumes = MediaType.APPLICATION_JSON_UTF8_VALUE,
+            produces = MediaType.APPLICATION_JSON_UTF8_VALUE
+    )
+    @LoginIgnore
+    @PostMapping("answer/check")
+    public  R checkAnswer(@Validated @RequestBody CheckAnswerPO checkAnswerPO){
+        CheckAnswerContext checkAnswerContext=userConverter.checkAnswerPO2CheckAnswerContext(checkAnswerPO);
+        String token=userService.checkAnswer(checkAnswerContext);
+        return R.data(token);
+    }
+    @ApiOperation(
+            value = "用户忘记密码-重置密码",
+            notes = "该模块提供了用户忘记密码-重置密码的功能",
+            consumes = MediaType.APPLICATION_JSON_UTF8_VALUE,
+            produces = MediaType.APPLICATION_JSON_UTF8_VALUE
+    )
+    @LoginIgnore
+    @PostMapping("password/reset")
+    public  R resetPassword(@Validated @RequestBody ResetPasswordPO resetPasswordPO){
+        ResetPasswordContext resetPasswordContext=userConverter.resetPasswordPO2ResetPasswordContext(resetPasswordPO);
+        userService.resetPassword(resetPasswordContext);
         return R.success();
     }
 }

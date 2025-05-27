@@ -1,7 +1,6 @@
 package xyz.xlls.rpan.server.modules.user.service;
 
-import xyz.xlls.rpan.server.modules.user.context.UserLoginContext;
-import xyz.xlls.rpan.server.modules.user.context.UserRegisterContext;
+import xyz.xlls.rpan.server.modules.user.context.*;
 import xyz.xlls.rpan.server.modules.user.entity.RPanUser;
 import com.baomidou.mybatisplus.extension.service.IService;
 
@@ -30,4 +29,24 @@ public interface IUserService extends IService<RPanUser> {
      * @param userId
      */
     void exit(Long userId);
+
+    /**
+     * 用户名忘记密码-校验用户名
+     * @param checkUsernameContext
+     * @return
+     */
+    String checkUsername(CheckUsernameContext checkUsernameContext);
+
+    /**
+     * 用户名忘记密码-校验密保答案
+     * @param checkAnswerContext
+     * @return
+     */
+    String checkAnswer(CheckAnswerContext checkAnswerContext);
+
+    /**
+     * 重置用户密码
+     * @param resetPasswordContext
+     */
+    void resetPassword(ResetPasswordContext resetPasswordContext);
 }
