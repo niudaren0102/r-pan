@@ -3,6 +3,10 @@ package xyz.xlls.rpan.server.modules.file.service;
 import xyz.xlls.rpan.server.modules.file.context.CreateFolderContext;
 import xyz.xlls.rpan.server.modules.file.entity.RPanUserFile;
 import com.baomidou.mybatisplus.extension.service.IService;
+import xyz.xlls.rpan.server.modules.user.context.QueryFileContext;
+import xyz.xlls.rpan.server.modules.user.vo.RPanUserFileVo;
+
+import java.util.List;
 
 /**
 * @author Administrator
@@ -23,4 +27,11 @@ public interface IUserFileService extends IService<RPanUserFile> {
      * @return
      */
     RPanUserFile getUserRootFile(Long userId);
+
+    /**
+     * 查询用户文件列表
+     * @param context
+     * @return
+     */
+    List<RPanUserFileVo> getFileList(QueryFileContext context);
 }

@@ -215,6 +215,10 @@ public class UserTest {
         changePasswordContext.setNewPassword("123456_changed");
         userService.changePassword(changePasswordContext);
     }
+
+    /**
+     * 查询用户基本信息
+     */
     @Test
     public void testQueryUserInfo(){
         UserRegisterContext context = createUserRegisterContext();

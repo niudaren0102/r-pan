@@ -16,8 +16,12 @@ import xyz.xlls.rpan.server.modules.file.enums.FolderFlagEnum;
 import xyz.xlls.rpan.server.modules.file.service.IUserFileService;
 import xyz.xlls.rpan.server.modules.file.mapper.RPanUserFileMapper;
 import org.springframework.stereotype.Service;
+import xyz.xlls.rpan.server.modules.user.context.QueryFileContext;
+import xyz.xlls.rpan.server.modules.user.vo.RPanUserFileVo;
 
+import java.util.Collections;
 import java.util.Date;
+import java.util.List;
 
 /**
 * @author Administrator
@@ -43,6 +47,11 @@ public class UserFileServiceImpl extends ServiceImpl<RPanUserFileMapper, RPanUse
                 null);
     }
 
+    /**
+     * 获取文件根目录信息
+     * @param userId
+     * @return
+     */
     @Override
     public RPanUserFile getUserRootFile(Long userId) {
         LambdaQueryWrapper<RPanUserFile> queryWrapper = new LambdaQueryWrapper<>();
@@ -51,6 +60,16 @@ public class UserFileServiceImpl extends ServiceImpl<RPanUserFileMapper, RPanUse
         queryWrapper.eq(RPanUserFile::getDelFlag,DelFlagEnum.NO.getCode());
         queryWrapper.eq(RPanUserFile::getFolderFlag,FolderFlagEnum.YES.getCode());
         return this.getOne(queryWrapper);
+    }
+
+    /**
+     * 查询用户的文件列表
+     * @param context
+     * @return
+     */
+    @Override
+    public List<RPanUserFileVo> getFileList(QueryFileContext context) {
+        return baseMapper.selectFileList(context);
     }
     /****************************private****************************/
     /**
