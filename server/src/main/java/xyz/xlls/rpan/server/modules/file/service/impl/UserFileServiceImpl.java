@@ -49,7 +49,7 @@ public class UserFileServiceImpl extends ServiceImpl<RPanUserFileMapper, RPanUse
         queryWrapper.eq(RPanUserFile::getUserId, userId);
         queryWrapper.eq(RPanUserFile::getParentId,FileConstants.TOP_PARENT_ID);
         queryWrapper.eq(RPanUserFile::getDelFlag,DelFlagEnum.NO.getCode());
-        queryWrapper.eq(RPanUserFile::getFolderFlag,FolderFlagEnum.YES);
+        queryWrapper.eq(RPanUserFile::getFolderFlag,FolderFlagEnum.YES.getCode());
         return this.getOne(queryWrapper);
     }
     /****************************private****************************/

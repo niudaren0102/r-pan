@@ -101,7 +101,7 @@ public class CommonLoginAspect {
             return false;
         }
         Cache cache = cacheManager.getCache(CacheConstants.R_PAN_CACHE_NAME);
-        Object redisAccessToken= cache.get(UserConstants.USER_LOGIN_PREFIX+userId);
+        String redisAccessToken=cache.get(UserConstants.USER_LOGIN_PREFIX+userId,String.class);
         if(Objects.isNull(redisAccessToken)){
             return false;
         }
