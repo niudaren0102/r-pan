@@ -3,8 +3,8 @@ package xyz.xlls.rpan.server.modules.file.service;
 import xyz.xlls.rpan.server.modules.file.context.CreateFolderContext;
 import xyz.xlls.rpan.server.modules.file.entity.RPanUserFile;
 import com.baomidou.mybatisplus.extension.service.IService;
-import xyz.xlls.rpan.server.modules.user.context.QueryFileContext;
-import xyz.xlls.rpan.server.modules.user.vo.RPanUserFileVo;
+import xyz.xlls.rpan.server.modules.file.context.QueryFileContext;
+import xyz.xlls.rpan.server.modules.file.vo.RPanUserFileVo;
 
 import java.util.List;
 

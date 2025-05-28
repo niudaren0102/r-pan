@@ -1,4 +1,4 @@
-package xyz.xlls.rpan.server.modules.user.vo;
+package xyz.xlls.rpan.server.modules.file.vo;
 
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import io.swagger.annotations.ApiModel;

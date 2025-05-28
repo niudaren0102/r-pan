@@ -27,7 +27,7 @@
         create_user,create_time,update_user,
         update_time
     </sql>
-    <select id="selectFileList" resultType="xyz.xlls.rpan.server.modules.user.vo.RPanUserFileVo">
+    <select id="selectFileList" resultType="xyz.xlls.rpan.server.modules.file.vo.RPanUserFileVo">
         select
         file_id AS fileId,
         parent_id AS parentId,

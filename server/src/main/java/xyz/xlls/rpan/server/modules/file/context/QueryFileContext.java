@@ -1,4 +1,4 @@
-package xyz.xlls.rpan.server.modules.user.context;
+package xyz.xlls.rpan.server.modules.file.context;
 
 import lombok.Data;
 

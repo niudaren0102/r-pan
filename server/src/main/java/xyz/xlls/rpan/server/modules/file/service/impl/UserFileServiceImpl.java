@@ -1,7 +1,6 @@
 package xyz.xlls.rpan.server.modules.file.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.extension.conditions.query.LambdaQueryChainWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.apache.commons.lang3.StringUtils;
 import xyz.xlls.rpan.core.constants.RPanConstants;
@@ -9,17 +8,15 @@ import xyz.xlls.rpan.core.exception.RPanBusinessException;
 import xyz.xlls.rpan.core.utils.IdUtil;
 import xyz.xlls.rpan.server.modules.file.constants.FileConstants;
 import xyz.xlls.rpan.server.modules.file.context.CreateFolderContext;
-import xyz.xlls.rpan.server.modules.file.entity.RPanFile;
 import xyz.xlls.rpan.server.modules.file.entity.RPanUserFile;
 import xyz.xlls.rpan.server.modules.file.enums.DelFlagEnum;
 import xyz.xlls.rpan.server.modules.file.enums.FolderFlagEnum;
 import xyz.xlls.rpan.server.modules.file.service.IUserFileService;
 import xyz.xlls.rpan.server.modules.file.mapper.RPanUserFileMapper;
 import org.springframework.stereotype.Service;
-import xyz.xlls.rpan.server.modules.user.context.QueryFileContext;
-import xyz.xlls.rpan.server.modules.user.vo.RPanUserFileVo;
+import xyz.xlls.rpan.server.modules.file.context.QueryFileContext;
+import xyz.xlls.rpan.server.modules.file.vo.RPanUserFileVo;
 
-import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 

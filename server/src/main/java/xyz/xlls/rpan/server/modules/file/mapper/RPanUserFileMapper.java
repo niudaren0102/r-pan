@@ -3,8 +3,8 @@ package xyz.xlls.rpan.server.modules.file.mapper;
 import org.apache.ibatis.annotations.Param;
 import xyz.xlls.rpan.server.modules.file.entity.RPanUserFile;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import xyz.xlls.rpan.server.modules.user.context.QueryFileContext;
-import xyz.xlls.rpan.server.modules.user.vo.RPanUserFileVo;
+import xyz.xlls.rpan.server.modules.file.context.QueryFileContext;
+import xyz.xlls.rpan.server.modules.file.vo.RPanUserFileVo;
 
 import java.util.List;
 

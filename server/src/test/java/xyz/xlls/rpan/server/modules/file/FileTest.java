@@ -9,13 +9,14 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 import xyz.xlls.rpan.server.RPanServerLauncher;
+import xyz.xlls.rpan.server.modules.file.context.CreateFolderContext;
 import xyz.xlls.rpan.server.modules.file.enums.DelFlagEnum;
 import xyz.xlls.rpan.server.modules.file.service.IUserFileService;
-import xyz.xlls.rpan.server.modules.user.context.QueryFileContext;
+import xyz.xlls.rpan.server.modules.file.context.QueryFileContext;
 import xyz.xlls.rpan.server.modules.user.context.UserLoginContext;
 import xyz.xlls.rpan.server.modules.user.context.UserRegisterContext;
 import xyz.xlls.rpan.server.modules.user.service.IUserService;
-import xyz.xlls.rpan.server.modules.user.vo.RPanUserFileVo;
+import xyz.xlls.rpan.server.modules.file.vo.RPanUserFileVo;
 import xyz.xlls.rpan.server.modules.user.vo.UserInfoVO;
 
 import java.util.List;
@@ -47,6 +48,24 @@ public class FileTest {
         List<RPanUserFileVo> result = userFileService.getFileList(context);
         Assert.isTrue(CollectionUtils.isEmpty(result));
     }
+
+    /**
+     * 测试创建文件夹成功
+     */
+    @Test
+    public void testCreateFolderSuccess(){
+        Long userId = register();
+        UserInfoVO info = info(userId);
+        CreateFolderContext context=new CreateFolderContext();
+        context.setParentId(info.getRootFileId());
+        context.setUserId(userId);
+        context.setFolderName("test");
+        Long fileId = userFileService.createFolder(context);
+        Assert.notNull(fileId);
+    }
+
+
+
     /**
      * 用户注册
      * @return 新用户的id

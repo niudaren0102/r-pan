@@ -1,21 +1,23 @@
-package xyz.xlls.rpan.server.modules.user.controller;
+package xyz.xlls.rpan.server.modules.file.controller;
 
 import com.google.common.base.Splitter;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import xyz.xlls.rpan.core.constants.RPanConstants;
 import xyz.xlls.rpan.core.response.R;
 import xyz.xlls.rpan.core.utils.IdUtil;
+import xyz.xlls.rpan.server.common.utils.UserIdUtil;
 import xyz.xlls.rpan.server.modules.file.constants.FileConstants;
+import xyz.xlls.rpan.server.modules.file.context.CreateFolderContext;
+import xyz.xlls.rpan.server.modules.file.converter.FileConverter;
 import xyz.xlls.rpan.server.modules.file.enums.DelFlagEnum;
 import xyz.xlls.rpan.server.modules.file.service.IUserFileService;
-import xyz.xlls.rpan.server.modules.user.context.QueryFileContext;
-import xyz.xlls.rpan.server.modules.user.vo.RPanUserFileVo;
+import xyz.xlls.rpan.server.modules.file.context.QueryFileContext;
+import xyz.xlls.rpan.server.modules.file.po.CreateFolderPO;
+import xyz.xlls.rpan.server.modules.file.vo.RPanUserFileVo;
 
 import javax.validation.constraints.NotBlank;
 import java.util.List;
@@ -30,6 +32,8 @@ import java.util.stream.Collectors;
 public class FileController {
     @Autowired
     private IUserFileService userFileService;
+    @Autowired
+    private FileConverter fileConverter;
     @ApiOperation(
             value = "查询文件列表",
             notes = "该接口提供了用户查询文件夹下面某些文件类型的文件列表的功能",
@@ -50,9 +54,23 @@ public class FileController {
         QueryFileContext context=new QueryFileContext();
         context.setParentId(realParentId);
         context.setFileTypeArray(fileTypeList);
-        context.setUserId(IdUtil.get());
+        context.setUserId(UserIdUtil.get());
         context.setDelFlag(DelFlagEnum.NO.getCode());
         List<RPanUserFileVo> result=userFileService.getFileList(context);
         return R.data(result);
+    }
+    @ApiOperation(
+            value = "创建文件夹",
+            notes = "该接口提供了创建文件夹的功能",
+            consumes = MediaType.APPLICATION_JSON_VALUE,
+            produces = MediaType.APPLICATION_JSON_VALUE
+    )
+    @PostMapping("file/folder")
+    public R<String> createFolder(
+           @Validated @RequestBody CreateFolderPO createFolderPo
+    ){
+        CreateFolderContext context=fileConverter.createFolderPO2CreateFolderContext(createFolderPo);
+        Long folder = userFileService.createFolder(context);
+        return R.success(IdUtil.encrypt(folder));
     }
 }
