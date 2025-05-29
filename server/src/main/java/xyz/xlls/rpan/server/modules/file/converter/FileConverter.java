@@ -4,9 +4,11 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingConstants;
 import xyz.xlls.rpan.server.modules.file.context.CreateFolderContext;
+import xyz.xlls.rpan.server.modules.file.context.DeleteFileContext;
 import xyz.xlls.rpan.server.modules.file.context.UpdateFilenameContext;
 import xyz.xlls.rpan.server.modules.file.entity.RPanUserFile;
 import xyz.xlls.rpan.server.modules.file.po.CreateFolderPO;
+import xyz.xlls.rpan.server.modules.file.po.DeleteFilePO;
 import xyz.xlls.rpan.server.modules.file.po.UpdateFilenamePO;
 import xyz.xlls.rpan.server.modules.user.context.*;
 import xyz.xlls.rpan.server.modules.user.entity.RPanUser;
@@ -24,4 +26,6 @@ public interface FileConverter {
     @Mapping(target = "fileId",expression = "java(xyz.xlls.rpan.core.utils.IdUtil.decrypt(updateFilenamePO.getFileId()))")
     @Mapping(target = "userId",expression = "java(xyz.xlls.rpan.server.common.utils.UserIdUtil.get())")
     UpdateFilenameContext updateFilenamePO2UpdateFilenameContext(UpdateFilenamePO updateFilenamePO);
+    @Mapping(target = "userId",expression = "java(xyz.xlls.rpan.server.common.utils.UserIdUtil.get())")
+    DeleteFileContext deleteFilePO2DeleteFileContext(DeleteFilePO deleteFilePO);
 }

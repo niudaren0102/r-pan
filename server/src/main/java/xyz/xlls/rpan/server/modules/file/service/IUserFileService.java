@@ -1,6 +1,7 @@
 package xyz.xlls.rpan.server.modules.file.service;
 
 import xyz.xlls.rpan.server.modules.file.context.CreateFolderContext;
+import xyz.xlls.rpan.server.modules.file.context.DeleteFileContext;
 import xyz.xlls.rpan.server.modules.file.context.UpdateFilenameContext;
 import xyz.xlls.rpan.server.modules.file.entity.RPanUserFile;
 import com.baomidou.mybatisplus.extension.service.IService;
@@ -41,4 +42,10 @@ public interface IUserFileService extends IService<RPanUserFile> {
      * @param context
      */
     void updateFilename(UpdateFilenameContext context);
+
+    /**
+     * 批量删除用户文件
+     * @param context
+     */
+    void deleteFile(DeleteFileContext context);
 }

@@ -1,13 +1,19 @@
 package xyz.xlls.rpan.server.modules.file.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.BeansException;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
 import xyz.xlls.rpan.core.constants.RPanConstants;
 import xyz.xlls.rpan.core.exception.RPanBusinessException;
 import xyz.xlls.rpan.core.utils.IdUtil;
+import xyz.xlls.rpan.server.common.event.file.DeleteFileEvent;
 import xyz.xlls.rpan.server.modules.file.constants.FileConstants;
 import xyz.xlls.rpan.server.modules.file.context.CreateFolderContext;
+import xyz.xlls.rpan.server.modules.file.context.DeleteFileContext;
 import xyz.xlls.rpan.server.modules.file.context.UpdateFilenameContext;
 import xyz.xlls.rpan.server.modules.file.entity.RPanUserFile;
 import xyz.xlls.rpan.server.modules.file.enums.DelFlagEnum;
@@ -21,6 +27,8 @@ import xyz.xlls.rpan.server.modules.file.vo.RPanUserFileVo;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
 * @author Administrator
@@ -29,7 +37,9 @@ import java.util.Objects;
 */
 @Service
 public class UserFileServiceImpl extends ServiceImpl<RPanUserFileMapper, RPanUserFile>
-    implements IUserFileService {
+    implements IUserFileService, ApplicationContextAware {
+    private ApplicationContext applicationContext;
+
     /**
      * 创建文件夹信息
      * @param context
@@ -81,6 +91,74 @@ public class UserFileServiceImpl extends ServiceImpl<RPanUserFileMapper, RPanUse
     public void updateFilename(UpdateFilenameContext context) {
         checkUpdateFilenameCondition(context);
         doUpdateFilename(context);
+    }
+
+    /**
+     * 批量删除用户文件
+     * 1、校验删除的条件是否符合
+     * 2、执行批量删除的动作
+     * 3、发布批量删除文件的事件、给其他模块订阅使用
+     * @param context
+     */
+    @Override
+    public void deleteFile(DeleteFileContext context) {
+        checkFileDeleteCondition(context);
+        doDeleteFile(context);
+        afterFileDelete(context);
+    }
+
+    /**
+     * 文件删除的后置操作
+     * 1、对外发布文件删除的事件
+     * @param context
+     */
+    private void afterFileDelete(DeleteFileContext context) {
+        DeleteFileEvent deleteFileEvent = new DeleteFileEvent(this,context.getFileIdList());
+        applicationContext.publishEvent(deleteFileEvent);
+    }
+
+    /**
+     * 执行删除文件的后置操作
+     * @param context
+     */
+    private void doDeleteFile(DeleteFileContext context) {
+        List<Long> fileIdList = context.getFileIdList();
+        LambdaUpdateWrapper<RPanUserFile> updateWrapper = new LambdaUpdateWrapper<>();
+        updateWrapper.in(RPanUserFile::getFileId,  fileIdList);
+        updateWrapper.set(RPanUserFile::getDelFlag,DelFlagEnum.YES.getCode());
+        updateWrapper.set(RPanUserFile::getUpdateTime,new Date());
+        if(!this.update(updateWrapper)){
+            throw new RPanBusinessException("文件删除失败");
+        }
+    }
+
+    /**
+     * 删除文件之前的前置校验
+     * 1、文件ID合法校验
+     * 2、用户具有删除该文件的权限
+     * @param context
+     */
+    private void checkFileDeleteCondition(DeleteFileContext context) {
+        List<Long> fileIdList = context.getFileIdList();
+        List<RPanUserFile> rPanUserFiles = this.listByIds(fileIdList);
+        if(rPanUserFiles.size()!=fileIdList.size()){
+            throw new RPanBusinessException("存在不合法的文件记录");
+        }
+        Set<Long> fileIdSet = rPanUserFiles.stream().map(RPanUserFile::getFileId).collect(Collectors.toSet());
+        int oldSize = fileIdSet.size();
+        fileIdSet.addAll(fileIdList);
+        int newSize = fileIdSet.size();
+        if(newSize!=oldSize){
+            throw new RPanBusinessException("存在不合法文件记录");
+        }
+        Set<Long> userIdSet = rPanUserFiles.stream().map(RPanUserFile::getUserId).collect(Collectors.toSet());
+        if(userIdSet.size()!=1){
+            throw new RPanBusinessException("存在不合法文件记录");
+        }
+        Long dbUserId = userIdSet.stream().findFirst().get();
+        if(!Objects.equals(dbUserId,context.getUserId())){
+            throw new RPanBusinessException("当前登录用户没有删除该文件的权限");
+        }
     }
 
     /**
@@ -247,6 +325,10 @@ public class UserFileServiceImpl extends ServiceImpl<RPanUserFileMapper, RPanUse
         return count(queryWrapper);
     }
 
+    @Override
+    public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
+        this.applicationContext=applicationContext;
+    }
 }
 
 
