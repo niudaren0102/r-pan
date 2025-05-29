@@ -12,8 +12,10 @@ import xyz.xlls.rpan.core.utils.IdUtil;
 import xyz.xlls.rpan.server.common.utils.UserIdUtil;
 import xyz.xlls.rpan.server.modules.file.constants.FileConstants;
 import xyz.xlls.rpan.server.modules.file.context.CreateFolderContext;
+import xyz.xlls.rpan.server.modules.file.context.UpdateFilenameContext;
 import xyz.xlls.rpan.server.modules.file.converter.FileConverter;
 import xyz.xlls.rpan.server.modules.file.enums.DelFlagEnum;
+import xyz.xlls.rpan.server.modules.file.po.UpdateFilenamePO;
 import xyz.xlls.rpan.server.modules.file.service.IUserFileService;
 import xyz.xlls.rpan.server.modules.file.context.QueryFileContext;
 import xyz.xlls.rpan.server.modules.file.po.CreateFolderPO;
@@ -72,5 +74,17 @@ public class FileController {
         CreateFolderContext context=fileConverter.createFolderPO2CreateFolderContext(createFolderPo);
         Long folder = userFileService.createFolder(context);
         return R.success(IdUtil.encrypt(folder));
+    }
+    @ApiOperation(
+            value = "文件重命名",
+            notes = "该接口提供了文件重命名的功能",
+            consumes = MediaType.APPLICATION_JSON_VALUE,
+            produces = MediaType.APPLICATION_JSON_VALUE
+    )
+    @PutMapping("file")
+    public R updateFilename(@Validated @RequestBody UpdateFilenamePO updateFilenamePO){
+        UpdateFilenameContext context=fileConverter.updateFilenamePO2UpdateFilenameContext(updateFilenamePO);
+        userFileService.updateFilename(context);
+        return R.success();
     }
 }

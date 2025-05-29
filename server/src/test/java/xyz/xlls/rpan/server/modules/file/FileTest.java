@@ -8,8 +8,10 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
+import xyz.xlls.rpan.core.exception.RPanBusinessException;
 import xyz.xlls.rpan.server.RPanServerLauncher;
 import xyz.xlls.rpan.server.modules.file.context.CreateFolderContext;
+import xyz.xlls.rpan.server.modules.file.context.UpdateFilenameContext;
 import xyz.xlls.rpan.server.modules.file.enums.DelFlagEnum;
 import xyz.xlls.rpan.server.modules.file.service.IUserFileService;
 import xyz.xlls.rpan.server.modules.file.context.QueryFileContext;
@@ -62,6 +64,117 @@ public class FileTest {
         context.setFolderName("test");
         Long fileId = userFileService.createFolder(context);
         Assert.notNull(fileId);
+    }
+
+    /**
+     * 测试文件重命名失败-文件ID无效
+     */
+    @Test(expected = RPanBusinessException.class)
+    public void testUpdateFilenameByWrongFileId(){
+        Long userId = register();
+        UserInfoVO info = info(userId);
+        CreateFolderContext context=new CreateFolderContext();
+        context.setParentId(info.getRootFileId());
+        context.setUserId(userId);
+        context.setFolderName("test");
+        Long fileId = userFileService.createFolder(context);
+        Assert.notNull(fileId);
+        UpdateFilenameContext updateFilenameContext=new UpdateFilenameContext();
+
+        updateFilenameContext.setUserId(userId);
+        updateFilenameContext.setFileId(1L);
+        updateFilenameContext.setNewFilename("test1");
+        userFileService.updateFilename(updateFilenameContext);
+    }
+
+    /**
+     * 测试文件重命名失败-用户ID无效
+     */
+    @Test(expected = RPanBusinessException.class)
+    public void testUpdateFilenameByWrongUserId(){
+        Long userId = register();
+        UserInfoVO info = info(userId);
+        CreateFolderContext context=new CreateFolderContext();
+        context.setParentId(info.getRootFileId());
+        context.setUserId(userId);
+        context.setFolderName("test");
+        Long fileId = userFileService.createFolder(context);
+        Assert.notNull(fileId);
+        UpdateFilenameContext updateFilenameContext=new UpdateFilenameContext();
+
+        updateFilenameContext.setUserId(userId+1);
+        updateFilenameContext.setFileId(fileId);
+        updateFilenameContext.setNewFilename("test1");
+        userFileService.updateFilename(updateFilenameContext);
+    }
+    /**
+     * 测试文件重命名失败-文件名称重复
+     */
+    @Test(expected = RPanBusinessException.class)
+    public void testUpdateFilenameByWrongNewFilename(){
+        Long userId = register();
+        UserInfoVO info = info(userId);
+        CreateFolderContext context=new CreateFolderContext();
+        context.setParentId(info.getRootFileId());
+        context.setUserId(userId);
+        context.setFolderName("test");
+        Long fileId = userFileService.createFolder(context);
+        Assert.notNull(fileId);
+        UpdateFilenameContext updateFilenameContext=new UpdateFilenameContext();
+
+        updateFilenameContext.setUserId(userId);
+        updateFilenameContext.setFileId(fileId);
+        updateFilenameContext.setNewFilename("test");
+        userFileService.updateFilename(updateFilenameContext);
+    }
+    /**
+     * 测试文件重命名失败-文件名称已被占用
+     */
+    @Test(expected = RPanBusinessException.class)
+    public void testUpdateFilenameByFilenameExists(){
+        Long userId = register();
+        UserInfoVO info = info(userId);
+        CreateFolderContext context=new CreateFolderContext();
+        context.setParentId(info.getRootFileId());
+        context.setUserId(userId);
+        context.setFolderName("test");
+        Long fileId = userFileService.createFolder(context);
+        Assert.notNull(fileId);
+
+        CreateFolderContext context1=new CreateFolderContext();
+        context1.setParentId(info.getRootFileId());
+        context1.setUserId(userId);
+        context1.setFolderName("test1");
+        Long fileId1 = userFileService.createFolder(context1);
+        Assert.notNull(fileId1);
+
+        UpdateFilenameContext updateFilenameContext=new UpdateFilenameContext();
+
+        updateFilenameContext.setUserId(userId);
+        updateFilenameContext.setFileId(fileId);
+        updateFilenameContext.setNewFilename("test1");
+        userFileService.updateFilename(updateFilenameContext);
+    }
+
+    /**
+     * 测试更新文件名称成功
+     */
+    @Test
+    public void testUpdateFilenameBySuccess(){
+        Long userId = register();
+        UserInfoVO info = info(userId);
+        CreateFolderContext context=new CreateFolderContext();
+        context.setParentId(info.getRootFileId());
+        context.setUserId(userId);
+        context.setFolderName("test");
+        Long fileId = userFileService.createFolder(context);
+        Assert.notNull(fileId);
+        UpdateFilenameContext updateFilenameContext=new UpdateFilenameContext();
+
+        updateFilenameContext.setUserId(userId);
+        updateFilenameContext.setFileId(fileId);
+        updateFilenameContext.setNewFilename("test1");
+        userFileService.updateFilename(updateFilenameContext);
     }
 
 

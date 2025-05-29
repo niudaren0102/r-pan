@@ -336,7 +336,7 @@ public class UserServiceImpl extends ServiceImpl<RPanUserMapper, RPanUser>
      * 需要捕获数据库的唯一索引冲突异常，来实现全局用户名称唯一
      * @param userRegisterContext
      */
-    private void doRegister(UserRegisterContext userRegisterContext) {
+    private void doRegister(UserRegisterContext userRegisterContext)  {
         RPanUser entity = userRegisterContext.getEntity();
         if(Objects.nonNull(entity)) {
             try{

@@ -1,6 +1,7 @@
 package xyz.xlls.rpan.server.modules.file.service;
 
 import xyz.xlls.rpan.server.modules.file.context.CreateFolderContext;
+import xyz.xlls.rpan.server.modules.file.context.UpdateFilenameContext;
 import xyz.xlls.rpan.server.modules.file.entity.RPanUserFile;
 import com.baomidou.mybatisplus.extension.service.IService;
 import xyz.xlls.rpan.server.modules.file.context.QueryFileContext;
@@ -34,4 +35,10 @@ public interface IUserFileService extends IService<RPanUserFile> {
      * @return
      */
     List<RPanUserFileVo> getFileList(QueryFileContext context);
+
+    /**
+     * 更新文件名称
+     * @param context
+     */
+    void updateFilename(UpdateFilenameContext context);
 }

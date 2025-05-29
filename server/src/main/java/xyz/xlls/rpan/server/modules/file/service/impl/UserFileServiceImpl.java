@@ -8,6 +8,7 @@ import xyz.xlls.rpan.core.exception.RPanBusinessException;
 import xyz.xlls.rpan.core.utils.IdUtil;
 import xyz.xlls.rpan.server.modules.file.constants.FileConstants;
 import xyz.xlls.rpan.server.modules.file.context.CreateFolderContext;
+import xyz.xlls.rpan.server.modules.file.context.UpdateFilenameContext;
 import xyz.xlls.rpan.server.modules.file.entity.RPanUserFile;
 import xyz.xlls.rpan.server.modules.file.enums.DelFlagEnum;
 import xyz.xlls.rpan.server.modules.file.enums.FolderFlagEnum;
@@ -19,6 +20,7 @@ import xyz.xlls.rpan.server.modules.file.vo.RPanUserFileVo;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 
 /**
 * @author Administrator
@@ -67,6 +69,63 @@ public class UserFileServiceImpl extends ServiceImpl<RPanUserFileMapper, RPanUse
     @Override
     public List<RPanUserFileVo> getFileList(QueryFileContext context) {
         return baseMapper.selectFileList(context);
+    }
+
+    /**
+     * 更新文件名称
+     * 1、校验更新文件名称的条件
+     * 2、执行更新文件名称的操作
+     * @param context
+     */
+    @Override
+    public void updateFilename(UpdateFilenameContext context) {
+        checkUpdateFilenameCondition(context);
+        doUpdateFilename(context);
+    }
+
+    /**
+     * 执行文件重命名的操作
+     * @param context
+     */
+    private void doUpdateFilename(UpdateFilenameContext context) {
+        RPanUserFile entity = context.getEntity();
+        entity.setFilename(context.getNewFilename());
+        entity.setUserId(context.getUserId());
+        entity.setUpdateTime(new Date());
+        if(!this.updateById(entity)){
+            throw new RPanBusinessException("文件重命名失败");
+        }
+    }
+
+    /**
+     * 更新文件名称
+     * 1、文件ID是否有效的
+     * 2、用户是否有权限更新该文件的文件名称
+     * 3、新旧文件名称不能一样
+     * 4、不能使用当前文件夹下面的字文件的名称
+     *
+     * @param context
+     */
+    private void checkUpdateFilenameCondition(UpdateFilenameContext context) {
+        Long fileId = context.getFileId();
+        RPanUserFile entity = this.getById(fileId);
+        if(Objects.isNull(entity)){
+            throw new RPanBusinessException("该文件ID无效");
+        }
+        if(!Objects.equals(entity.getUserId(),context.getUserId())){
+            throw new RPanBusinessException("当前登录的用户没有修改改文件名称的权限");
+        }
+        if(Objects.equals(entity.getFilename(),context.getNewFilename())){
+            throw new RPanBusinessException("请换一个新的文件名称来修改");
+        }
+        LambdaQueryWrapper<RPanUserFile> queryWrapper=new LambdaQueryWrapper<>();
+        queryWrapper.eq(RPanUserFile::getParentId,entity.getParentId());
+        queryWrapper.eq(RPanUserFile::getFilename,context.getNewFilename());
+        int count = this.count(queryWrapper);
+        if(count>0){
+            throw new RPanBusinessException("该文件名称已被占用");
+        }
+        context.setEntity(entity);
     }
     /****************************private****************************/
     /**
