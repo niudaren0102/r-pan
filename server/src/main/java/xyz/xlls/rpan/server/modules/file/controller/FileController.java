@@ -11,15 +11,13 @@ import xyz.xlls.rpan.core.response.R;
 import xyz.xlls.rpan.core.utils.IdUtil;
 import xyz.xlls.rpan.server.common.utils.UserIdUtil;
 import xyz.xlls.rpan.server.modules.file.constants.FileConstants;
-import xyz.xlls.rpan.server.modules.file.context.CreateFolderContext;
-import xyz.xlls.rpan.server.modules.file.context.DeleteFileContext;
-import xyz.xlls.rpan.server.modules.file.context.UpdateFilenameContext;
+import xyz.xlls.rpan.server.modules.file.context.*;
 import xyz.xlls.rpan.server.modules.file.converter.FileConverter;
 import xyz.xlls.rpan.server.modules.file.enums.DelFlagEnum;
 import xyz.xlls.rpan.server.modules.file.po.DeleteFilePO;
+import xyz.xlls.rpan.server.modules.file.po.SecUploadPO;
 import xyz.xlls.rpan.server.modules.file.po.UpdateFilenamePO;
 import xyz.xlls.rpan.server.modules.file.service.IUserFileService;
-import xyz.xlls.rpan.server.modules.file.context.QueryFileContext;
 import xyz.xlls.rpan.server.modules.file.po.CreateFolderPO;
 import xyz.xlls.rpan.server.modules.file.vo.RPanUserFileVo;
 
@@ -104,5 +102,21 @@ public class FileController {
         context.setFileIdList(fileIdList);
         userFileService.deleteFile(context);
         return R.success();
+    }
+
+    @ApiOperation(
+            value = "文件秒传",
+            notes = "该接口提供了文件秒传的功能",
+            consumes = MediaType.APPLICATION_JSON_VALUE,
+            produces = MediaType.APPLICATION_JSON_VALUE
+    )
+    @DeleteMapping("file/sec-upload")
+    public R secUpload(@RequestBody @Validated SecUploadPO secUploadPO) {
+        SecUploadContext context = fileConverter.secUploadPO2SecUploadContext(secUploadPO);
+        boolean success=userFileService.secUpload(context);
+        if(success){
+            return R.success();
+        }
+        return R.fail("文件唯一标识不存在，请手动执行文件上传的操作");
     }
 }

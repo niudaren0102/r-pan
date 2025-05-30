@@ -1,27 +1,30 @@
 package xyz.xlls.rpan.server.modules.file.service.impl;
 
+import cn.hutool.core.collection.CollectionUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import xyz.xlls.rpan.core.constants.RPanConstants;
 import xyz.xlls.rpan.core.exception.RPanBusinessException;
+import xyz.xlls.rpan.core.utils.FileUtil;
 import xyz.xlls.rpan.core.utils.IdUtil;
 import xyz.xlls.rpan.server.common.event.file.DeleteFileEvent;
 import xyz.xlls.rpan.server.modules.file.constants.FileConstants;
-import xyz.xlls.rpan.server.modules.file.context.CreateFolderContext;
-import xyz.xlls.rpan.server.modules.file.context.DeleteFileContext;
-import xyz.xlls.rpan.server.modules.file.context.UpdateFilenameContext;
+import xyz.xlls.rpan.server.modules.file.context.*;
+import xyz.xlls.rpan.server.modules.file.entity.RPanFile;
 import xyz.xlls.rpan.server.modules.file.entity.RPanUserFile;
 import xyz.xlls.rpan.server.modules.file.enums.DelFlagEnum;
+import xyz.xlls.rpan.server.modules.file.enums.FileTypeEnum;
 import xyz.xlls.rpan.server.modules.file.enums.FolderFlagEnum;
+import xyz.xlls.rpan.server.modules.file.service.IFileService;
 import xyz.xlls.rpan.server.modules.file.service.IUserFileService;
 import xyz.xlls.rpan.server.modules.file.mapper.RPanUserFileMapper;
 import org.springframework.stereotype.Service;
-import xyz.xlls.rpan.server.modules.file.context.QueryFileContext;
 import xyz.xlls.rpan.server.modules.file.vo.RPanUserFileVo;
 
 import java.util.Date;
@@ -39,6 +42,8 @@ import java.util.stream.Collectors;
 public class UserFileServiceImpl extends ServiceImpl<RPanUserFileMapper, RPanUserFile>
     implements IUserFileService, ApplicationContextAware {
     private ApplicationContext applicationContext;
+    @Autowired
+    private IFileService fileService;
 
     /**
      * 创建文件夹信息
@@ -105,6 +110,38 @@ public class UserFileServiceImpl extends ServiceImpl<RPanUserFileMapper, RPanUse
         checkFileDeleteCondition(context);
         doDeleteFile(context);
         afterFileDelete(context);
+    }
+
+    /**
+     *  文件秒传
+     *  1、通过文件的唯一标识，查找对应的实体文件记录
+     *  2、如果没有查到，直接返回秒传失败
+     *  3、如果查到记录，直接挂载关联管理，返回秒传成功即可
+     * @param context
+     * @return
+     */
+    @Override
+    public boolean secUpload(SecUploadContext context) {
+        RPanFile record=getFileByUserIdAndIdentifier(context.getUserId(), context.getIdentifier());
+        if(Objects.isNull(record)){
+            return false;
+        }
+        saveUserFile(context.getParentId(),
+                context.getFilename(),
+                FolderFlagEnum.NO,
+                FileTypeEnum.getFileTypeCode(FileUtil.getFileSuffix(context.getFilename())),
+                record.getFileId(),
+                context.getUserId(),
+                record.getFileSizeDesc());
+        return true;
+    }
+
+    private RPanFile getFileByUserIdAndIdentifier(Long userId, String identifier) {
+        List<RPanFile> records= fileService.getFileByUserIdAndIdentifier(userId, identifier);
+        if(CollectionUtil.isEmpty(records)){
+            return null;
+        }
+        return records.get(RPanConstants.ZERO_INT);
     }
 
     /**

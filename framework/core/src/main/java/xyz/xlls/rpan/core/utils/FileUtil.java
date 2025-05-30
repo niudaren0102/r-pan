@@ -24,7 +24,7 @@ import java.util.Objects;
 /**
  * 公用的文件工具类
  */
-public class FileUtils {
+public class FileUtil {
 
     /**
      * 获取文件的后缀
