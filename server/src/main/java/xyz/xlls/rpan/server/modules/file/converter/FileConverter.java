@@ -3,15 +3,9 @@ package xyz.xlls.rpan.server.modules.file.converter;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingConstants;
-import xyz.xlls.rpan.server.modules.file.context.CreateFolderContext;
-import xyz.xlls.rpan.server.modules.file.context.DeleteFileContext;
-import xyz.xlls.rpan.server.modules.file.context.SecUploadContext;
-import xyz.xlls.rpan.server.modules.file.context.UpdateFilenameContext;
+import xyz.xlls.rpan.server.modules.file.context.*;
 import xyz.xlls.rpan.server.modules.file.entity.RPanUserFile;
-import xyz.xlls.rpan.server.modules.file.po.CreateFolderPO;
-import xyz.xlls.rpan.server.modules.file.po.DeleteFilePO;
-import xyz.xlls.rpan.server.modules.file.po.SecUploadPO;
-import xyz.xlls.rpan.server.modules.file.po.UpdateFilenamePO;
+import xyz.xlls.rpan.server.modules.file.po.*;
 import xyz.xlls.rpan.server.modules.user.context.*;
 import xyz.xlls.rpan.server.modules.user.entity.RPanUser;
 import xyz.xlls.rpan.server.modules.user.po.*;
@@ -33,4 +27,9 @@ public interface FileConverter {
     @Mapping(target = "parentId",expression = "java(xyz.xlls.rpan.core.utils.IdUtil.decrypt(secUploadPO.getParentId()))")
     @Mapping(target = "userId",expression = "java(xyz.xlls.rpan.server.common.utils.UserIdUtil.get())")
     SecUploadContext secUploadPO2SecUploadContext(SecUploadPO secUploadPO);
+    @Mapping(target = "parentId",expression = "java(xyz.xlls.rpan.core.utils.IdUtil.decrypt(fileUploadPO.getParentId()))")
+    @Mapping(target = "userId",expression = "java(xyz.xlls.rpan.server.common.utils.UserIdUtil.get())")
+    FileUploadContext fileUploadPO2FileUploadContext(FileUploadPO fileUploadPO);
+    @Mapping(target = "record",ignore = true)
+    FileSaveContext fileUploadContext2FileSaveContext(FileUploadContext context);
 }

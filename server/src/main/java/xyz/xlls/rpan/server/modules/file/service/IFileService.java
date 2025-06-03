@@ -2,6 +2,7 @@ package xyz.xlls.rpan.server.modules.file.service;
 
 import xyz.xlls.rpan.server.modules.file.entity.RPanFile;
 import com.baomidou.mybatisplus.extension.service.IService;
+import xyz.xlls.rpan.server.modules.file.context.FileSaveContext;
 
 import java.util.List;
 
@@ -18,4 +19,10 @@ public interface IFileService extends IService<RPanFile> {
      * @return
      */
     List<RPanFile> getFileByUserIdAndIdentifier(Long userId, String identifier);
+
+    /**
+     * 上传单文件并保存实体记录
+     * @param context
+     */
+    void saveFile(FileSaveContext context);
 }

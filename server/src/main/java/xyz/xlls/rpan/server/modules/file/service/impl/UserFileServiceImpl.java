@@ -9,6 +9,7 @@ import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
+import org.springframework.transaction.annotation.Transactional;
 import xyz.xlls.rpan.core.constants.RPanConstants;
 import xyz.xlls.rpan.core.exception.RPanBusinessException;
 import xyz.xlls.rpan.core.utils.FileUtil;
@@ -16,6 +17,7 @@ import xyz.xlls.rpan.core.utils.IdUtil;
 import xyz.xlls.rpan.server.common.event.file.DeleteFileEvent;
 import xyz.xlls.rpan.server.modules.file.constants.FileConstants;
 import xyz.xlls.rpan.server.modules.file.context.*;
+import xyz.xlls.rpan.server.modules.file.converter.FileConverter;
 import xyz.xlls.rpan.server.modules.file.entity.RPanFile;
 import xyz.xlls.rpan.server.modules.file.entity.RPanUserFile;
 import xyz.xlls.rpan.server.modules.file.enums.DelFlagEnum;
@@ -44,7 +46,8 @@ public class UserFileServiceImpl extends ServiceImpl<RPanUserFileMapper, RPanUse
     private ApplicationContext applicationContext;
     @Autowired
     private IFileService fileService;
-
+    @Autowired
+    private FileConverter fileConverter;
     /**
      * 创建文件夹信息
      * @param context
@@ -134,6 +137,38 @@ public class UserFileServiceImpl extends ServiceImpl<RPanUserFileMapper, RPanUse
                 context.getUserId(),
                 record.getFileSizeDesc());
         return true;
+    }
+
+    /**
+     * 单文件上传
+     * 1、上传文件并保存实体文件记录
+     * 2、保存用户文件的关系记录
+     * @param context
+     */
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void upload(FileUploadContext context) {
+        saveFile(context);
+        saveUserFile(
+                context.getParentId(),
+                context.getFilename(),
+                FolderFlagEnum.NO,
+                FileTypeEnum.getFileTypeCode(FileUtil.getFileSuffix(context.getFilename())),
+                context.getRecord().getFileId(),
+                context.getUserId(),
+                context.getRecord().getFileSizeDesc()
+        );
+    }
+
+    /**
+     * 上传文件并保存实体文件记录
+     * 委托给实体文件的Service去完成该操作
+     * @param context
+     */
+    private void saveFile(FileUploadContext context) {
+        FileSaveContext fileSaveContext=fileConverter.fileUploadContext2FileSaveContext(context);
+        fileService.saveFile(fileSaveContext);
+        context.setRecord(fileSaveContext.getRecord());
     }
 
     private RPanFile getFileByUserIdAndIdentifier(Long userId, String identifier) {
@@ -346,7 +381,7 @@ public class UserFileServiceImpl extends ServiceImpl<RPanUserFileMapper, RPanUse
     }
 
     /**
-     * 查找同一文件夹下面桶名文件数量
+     * 查找同一文件夹下面同名文件数量
      * @param entity
      * @param newFilenameWithoutSuffix
      * @return

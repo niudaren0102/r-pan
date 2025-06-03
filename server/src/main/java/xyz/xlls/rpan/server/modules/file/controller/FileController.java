@@ -14,11 +14,8 @@ import xyz.xlls.rpan.server.modules.file.constants.FileConstants;
 import xyz.xlls.rpan.server.modules.file.context.*;
 import xyz.xlls.rpan.server.modules.file.converter.FileConverter;
 import xyz.xlls.rpan.server.modules.file.enums.DelFlagEnum;
-import xyz.xlls.rpan.server.modules.file.po.DeleteFilePO;
-import xyz.xlls.rpan.server.modules.file.po.SecUploadPO;
-import xyz.xlls.rpan.server.modules.file.po.UpdateFilenamePO;
+import xyz.xlls.rpan.server.modules.file.po.*;
 import xyz.xlls.rpan.server.modules.file.service.IUserFileService;
-import xyz.xlls.rpan.server.modules.file.po.CreateFolderPO;
 import xyz.xlls.rpan.server.modules.file.vo.RPanUserFileVo;
 
 import javax.validation.constraints.NotBlank;
@@ -118,5 +115,18 @@ public class FileController {
             return R.success();
         }
         return R.fail("文件唯一标识不存在，请手动执行文件上传的操作");
+    }
+
+    @ApiOperation(
+            value = "单文件上传",
+            notes = "该接口提供了单文件上传的功能",
+            consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE,
+            produces = MediaType.APPLICATION_JSON_VALUE
+    )
+    @DeleteMapping("file/upload")
+    public R upload(@RequestBody @Validated FileUploadPO fileUploadPO) {
+        FileUploadContext context = fileConverter.fileUploadPO2FileUploadContext(fileUploadPO);
+        userFileService.upload(context);
+        return R.success();
     }
 }
