@@ -50,6 +50,11 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-aop</artifactId>
         </dependency>
+        <dependency>
+            <groupId>xyz.xlls.rpan</groupId>
+            <artifactId>r-pan-storage-engine-local</artifactId>
+            <version>1.0</version>
+        </dependency>
     </dependencies>
     <build>
         <finalName>r-pan-server</finalName>

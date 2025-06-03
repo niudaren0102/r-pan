@@ -5,9 +5,11 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
+import org.springframework.web.multipart.MultipartFile;
 import xyz.xlls.rpan.core.exception.RPanBusinessException;
 import xyz.xlls.rpan.core.utils.IdUtil;
 import xyz.xlls.rpan.server.RPanServerLauncher;
@@ -297,6 +299,45 @@ public class FileTest {
         Assert.isFalse(result);
     }
 
+    /**
+     * 测试单文件上传成功
+     */
+    @Test
+    public void testUploadSuccess(){
+        Long userId=register();
+        UserInfoVO info = info(userId);
+        FileUploadContext context = new FileUploadContext();
+        MultipartFile file=genarateMultipartFile();
+        context.setFile(file);
+        context.setParentId(info.getRootFileId());
+        context.setUserId(userId);
+        context.setTotalSize(file.getSize());
+        context.setIdentifier("12345678");
+        context.setFilename(file.getOriginalFilename());
+        userFileService.upload(context);
+        QueryFileContext queryFileContext=new QueryFileContext();
+        queryFileContext.setDelFlag(DelFlagEnum.NO.getCode());
+        queryFileContext.setUserId(userId);
+        queryFileContext.setParentId(info.getRootFileId());
+        List<RPanUserFileVo> fileList = userFileService.getFileList(queryFileContext);
+        Assert.notEmpty(fileList);
+        Assert.isTrue(fileList.size()==1);
+
+    }
+
+    /**
+     * 生成模拟的网络文件实体
+     * @return
+     */
+    private MultipartFile genarateMultipartFile() {
+        MultipartFile file=null;
+        try {
+            file=new MockMultipartFile("file", "test.txt", "multipart/form-data", "test".getBytes("UTF-8"));
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+        return file;
+    }
 
     /**
      * 用户注册
