@@ -18,6 +18,7 @@ import xyz.xlls.rpan.server.modules.file.po.*;
 import xyz.xlls.rpan.server.modules.file.service.IUserFileService;
 import xyz.xlls.rpan.server.modules.file.vo.FileChunkUploadVO;
 import xyz.xlls.rpan.server.modules.file.vo.RPanUserFileVo;
+import xyz.xlls.rpan.server.modules.file.vo.UploadedChunksVO;
 
 import javax.validation.constraints.NotBlank;
 import java.util.List;
@@ -141,5 +142,14 @@ public class FileController {
         FileChunkUploadContext context = fileConverter.chunkUploadPO2ChunkUploadContext(fileChunkUploadPO);
         FileChunkUploadVO vo=userFileService.chunkUpload(context);
         return R.data(vo);
+    }
+    @ApiOperation(
+            value = "文件分片检查",
+            notes = "该接口提供了文件分片检查的功能",
+            consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE,
+            produces = MediaType.APPLICATION_JSON_VALUE
+    )
+    @GetMapping("file/chunk-upload")
+    public R<UploadedChunksVO> getUploadedChunks(@Validated QueryUploadedChunksPO queryUploadedChunksPO){
     }
 }
