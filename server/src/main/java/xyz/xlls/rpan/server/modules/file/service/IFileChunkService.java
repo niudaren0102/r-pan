@@ -1,8 +1,11 @@
 package xyz.xlls.rpan.server.modules.file.service;
 
 import xyz.xlls.rpan.server.modules.file.context.FileChunkSaveContext;
+import xyz.xlls.rpan.server.modules.file.context.QueryUploadedChunksContext;
 import xyz.xlls.rpan.server.modules.file.entity.RPanFileChunk;
 import com.baomidou.mybatisplus.extension.service.IService;
+
+import java.util.List;
 
 /**
 * @author Administrator
@@ -15,4 +18,11 @@ public interface IFileChunkService extends IService<RPanFileChunk> {
      * @param fileChunkSaveContext
      */
     void saveChunkFile(FileChunkSaveContext fileChunkSaveContext);
+
+    /**
+     * 查询已上传用户分片
+     * @param context
+     * @return
+     */
+    List<Integer> queryUploadedChunks(QueryUploadedChunksContext context);
 }

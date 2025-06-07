@@ -151,5 +151,8 @@ public class FileController {
     )
     @GetMapping("file/chunk-upload")
     public R<UploadedChunksVO> getUploadedChunks(@Validated QueryUploadedChunksPO queryUploadedChunksPO){
+        QueryUploadedChunksContext context=fileConverter.queryUploadedChunksPO2QueryUploadedChunksContext(queryUploadedChunksPO);
+        UploadedChunksVO vo=userFileService.getUploadedChunks(context);
+        return R.data(vo);
     }
 }

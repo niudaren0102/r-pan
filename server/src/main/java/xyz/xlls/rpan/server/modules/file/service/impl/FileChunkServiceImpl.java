@@ -8,6 +8,7 @@ import xyz.xlls.rpan.core.exception.RPanBusinessException;
 import xyz.xlls.rpan.core.utils.IdUtil;
 import xyz.xlls.rpan.server.common.config.PanServerConfig;
 import xyz.xlls.rpan.server.modules.file.context.FileChunkSaveContext;
+import xyz.xlls.rpan.server.modules.file.context.QueryUploadedChunksContext;
 import xyz.xlls.rpan.server.modules.file.converter.FileConverter;
 import xyz.xlls.rpan.server.modules.file.entity.RPanFileChunk;
 import xyz.xlls.rpan.server.modules.file.enums.MergeFlagEnum;
@@ -18,7 +19,9 @@ import xyz.xlls.rpan.storage.engine.core.context.StoreFileChunkContext;
 import xyz.xlls.rpan.storage.engine.local.LocalStorageEngine;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.Date;
+import java.util.List;
 
 /**
 * @author Administrator
@@ -45,6 +48,21 @@ public class FileChunkServiceImpl extends ServiceImpl<RPanFileChunkMapper, RPanF
     public synchronized void saveChunkFile(FileChunkSaveContext fileChunkSaveContext) {
         doSaveChunkFile(fileChunkSaveContext);
         doJudgeMergeFile(fileChunkSaveContext);
+    }
+
+    /**
+     *  查询已上传用户分片
+     * @param context
+     * @return
+     */
+    @Override
+    public List<Integer> queryUploadedChunks(QueryUploadedChunksContext context) {
+        LambdaQueryWrapper<RPanFileChunk> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.select(RPanFileChunk::getChunkNumber);
+        queryWrapper.eq(RPanFileChunk::getIdentifier, context.getIdentifier());
+        queryWrapper.eq(RPanFileChunk::getCreateUser, context.getUserId());
+        queryWrapper.gt(RPanFileChunk::getExpirationTime, new Date());
+        return listObjs(queryWrapper,value->(Integer) value);
     }
 
     /**

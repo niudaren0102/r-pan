@@ -30,6 +30,7 @@ import xyz.xlls.rpan.server.modules.file.mapper.RPanUserFileMapper;
 import org.springframework.stereotype.Service;
 import xyz.xlls.rpan.server.modules.file.vo.FileChunkUploadVO;
 import xyz.xlls.rpan.server.modules.file.vo.RPanUserFileVo;
+import xyz.xlls.rpan.server.modules.file.vo.UploadedChunksVO;
 
 import java.util.Date;
 import java.util.List;
@@ -223,6 +224,21 @@ public class UserFileServiceImpl extends ServiceImpl<RPanUserFileMapper, RPanUse
         FileChunkUploadVO vo=new FileChunkUploadVO();
         vo.setMergeFlag(fileChunkSaveContext.getMergeFlagEnum().getCode());
 
+        return vo;
+    }
+
+    /**
+     * 查询用户已上传的分片列表
+     * 1、查询已上传的分片列表
+     * 2、封装返回实体
+     * @param context
+     * @return
+     */
+    @Override
+    public UploadedChunksVO getUploadedChunks(QueryUploadedChunksContext context) {
+        List<Integer> uploadedChunks =fileChunkService.queryUploadedChunks(context);
+        UploadedChunksVO vo = new UploadedChunksVO();
+        vo.setUploadedChunks(uploadedChunks);
         return vo;
     }
 

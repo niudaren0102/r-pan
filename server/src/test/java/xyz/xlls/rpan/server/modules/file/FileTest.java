@@ -1,5 +1,6 @@
 package xyz.xlls.rpan.server.modules.file;
 
+import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.lang.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -15,7 +16,9 @@ import xyz.xlls.rpan.core.utils.IdUtil;
 import xyz.xlls.rpan.server.RPanServerLauncher;
 import xyz.xlls.rpan.server.modules.file.context.*;
 import xyz.xlls.rpan.server.modules.file.entity.RPanFile;
+import xyz.xlls.rpan.server.modules.file.entity.RPanFileChunk;
 import xyz.xlls.rpan.server.modules.file.enums.DelFlagEnum;
+import xyz.xlls.rpan.server.modules.file.service.IFileChunkService;
 import xyz.xlls.rpan.server.modules.file.service.IFileService;
 import xyz.xlls.rpan.server.modules.file.service.IUserFileService;
 import xyz.xlls.rpan.server.modules.user.context.UserLoginContext;
@@ -41,6 +44,8 @@ public class FileTest {
     private IUserService userService;
     @Autowired
     private IFileService fileService;
+    @Autowired
+    private IFileChunkService fileChunkService;
 
     /**
      * 测试用户查询文件列表成功
@@ -322,6 +327,31 @@ public class FileTest {
         List<RPanUserFileVo> fileList = userFileService.getFileList(queryFileContext);
         Assert.notEmpty(fileList);
         Assert.isTrue(fileList.size()==1);
+
+    }
+    /**
+     * 测试查询用户已上传的文件分片信息列表成功
+     */
+    @Test
+    public void testQueryUploadedChunksSuccess(){
+        Long register = register();
+        UserInfoVO info = info(register);
+        RPanFileChunk rPanFileChunk = new RPanFileChunk();
+        rPanFileChunk.setId(IdUtil.get());
+        rPanFileChunk.setIdentifier("test");
+        rPanFileChunk.setRealPath("realPath");
+        rPanFileChunk.setChunkNumber(1);
+        rPanFileChunk.setExpirationTime(DateUtil.offsetDay(new Date(),1));
+        rPanFileChunk.setCreateTime(new Date());
+        rPanFileChunk.setCreateUser(register);
+        boolean save = fileChunkService.save(rPanFileChunk);
+        Assert.isTrue(save);
+        QueryUploadedChunksContext context=new QueryUploadedChunksContext();
+        context.setIdentifier("test");
+        context.setUserId(register);
+        List<Integer> uploadedChunks = fileChunkService.queryUploadedChunks(context);
+        Assert.notEmpty(uploadedChunks);
+        Assert.isTrue(uploadedChunks.size()==1);
 
     }
 
