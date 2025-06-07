@@ -23,10 +23,12 @@ import xyz.xlls.rpan.server.modules.file.entity.RPanUserFile;
 import xyz.xlls.rpan.server.modules.file.enums.DelFlagEnum;
 import xyz.xlls.rpan.server.modules.file.enums.FileTypeEnum;
 import xyz.xlls.rpan.server.modules.file.enums.FolderFlagEnum;
+import xyz.xlls.rpan.server.modules.file.service.IFileChunkService;
 import xyz.xlls.rpan.server.modules.file.service.IFileService;
 import xyz.xlls.rpan.server.modules.file.service.IUserFileService;
 import xyz.xlls.rpan.server.modules.file.mapper.RPanUserFileMapper;
 import org.springframework.stereotype.Service;
+import xyz.xlls.rpan.server.modules.file.vo.FileChunkUploadVO;
 import xyz.xlls.rpan.server.modules.file.vo.RPanUserFileVo;
 
 import java.util.Date;
@@ -48,6 +50,8 @@ public class UserFileServiceImpl extends ServiceImpl<RPanUserFileMapper, RPanUse
     private IFileService fileService;
     @Autowired
     private FileConverter fileConverter;
+    @Autowired
+    private IFileChunkService fileChunkService;
     /**
      * 创建文件夹信息
      * @param context
@@ -202,6 +206,24 @@ public class UserFileServiceImpl extends ServiceImpl<RPanUserFileMapper, RPanUse
         if(!this.update(updateWrapper)){
             throw new RPanBusinessException("文件删除失败");
         }
+    }
+
+    /**
+     *  文件分片上传
+     *  1、上传实体文件
+     *  2、保存分片文件记录、
+     *  3、校验是否全部分片上传完成
+     * @param context
+     * @return
+     */
+    @Override
+    public FileChunkUploadVO chunkUpload(FileChunkUploadContext context) {
+        FileChunkSaveContext fileChunkSaveContext=fileConverter.fileChunkUploadContext2FileChunkSaveContext(context);
+        fileChunkService.saveChunkFile(fileChunkSaveContext);
+        FileChunkUploadVO vo=new FileChunkUploadVO();
+        vo.setMergeFlag(fileChunkSaveContext.getMergeFlagEnum().getCode());
+
+        return vo;
     }
 
     /**

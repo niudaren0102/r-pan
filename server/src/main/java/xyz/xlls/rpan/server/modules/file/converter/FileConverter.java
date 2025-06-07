@@ -4,12 +4,8 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingConstants;
 import xyz.xlls.rpan.server.modules.file.context.*;
-import xyz.xlls.rpan.server.modules.file.entity.RPanUserFile;
 import xyz.xlls.rpan.server.modules.file.po.*;
-import xyz.xlls.rpan.server.modules.user.context.*;
-import xyz.xlls.rpan.server.modules.user.entity.RPanUser;
-import xyz.xlls.rpan.server.modules.user.po.*;
-import xyz.xlls.rpan.server.modules.user.vo.UserInfoVO;
+import xyz.xlls.rpan.storage.engine.core.context.StoreFileChunkContext;
 
 /**
  * 文件模块实体转化工具
@@ -32,4 +28,10 @@ public interface FileConverter {
     FileUploadContext fileUploadPO2FileUploadContext(FileUploadPO fileUploadPO);
     @Mapping(target = "record",ignore = true)
     FileSaveContext fileUploadContext2FileSaveContext(FileUploadContext context);
+    @Mapping(target = "userId",expression = "java(xyz.xlls.rpan.server.common.utils.UserIdUtil.get())")
+    FileChunkUploadContext chunkUploadPO2ChunkUploadContext(FileChunkUploadPO fileChunkUploadPO);
+
+    FileChunkSaveContext fileChunkUploadContext2FileChunkSaveContext(FileChunkUploadContext context);
+    @Mapping(target = "realPath",ignore = true)
+    StoreFileChunkContext fileChunkSaveContext2StoreFileChunkContext(FileChunkSaveContext fileChunkSaveContext);
 }

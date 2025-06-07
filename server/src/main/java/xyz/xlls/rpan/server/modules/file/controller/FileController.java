@@ -16,6 +16,7 @@ import xyz.xlls.rpan.server.modules.file.converter.FileConverter;
 import xyz.xlls.rpan.server.modules.file.enums.DelFlagEnum;
 import xyz.xlls.rpan.server.modules.file.po.*;
 import xyz.xlls.rpan.server.modules.file.service.IUserFileService;
+import xyz.xlls.rpan.server.modules.file.vo.FileChunkUploadVO;
 import xyz.xlls.rpan.server.modules.file.vo.RPanUserFileVo;
 
 import javax.validation.constraints.NotBlank;
@@ -128,5 +129,17 @@ public class FileController {
         FileUploadContext context = fileConverter.fileUploadPO2FileUploadContext(fileUploadPO);
         userFileService.upload(context);
         return R.success();
+    }
+    @ApiOperation(
+            value = "文件分片上传",
+            notes = "该接口提供了文件分片上传的功能",
+            consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE,
+            produces = MediaType.APPLICATION_JSON_VALUE
+    )
+    @PostMapping("file/chunk-upload")
+    public R<FileChunkUploadVO> chunkUpload(@RequestBody @Validated FileChunkUploadPO fileChunkUploadPO) {
+        FileChunkUploadContext context = fileConverter.chunkUploadPO2ChunkUploadContext(fileChunkUploadPO);
+        FileChunkUploadVO vo=userFileService.chunkUpload(context);
+        return R.data(vo);
     }
 }

@@ -1,0 +1,10 @@
+{
+  "properties": [
+    {
+      "name": "xyz.xlls.rpan.server.chunk-file-expiration-days",
+      "type": "java.lang.Integer",
+      "description": "分片时间的过期天数",
+      "defaultValue": "1"
+    }
+  ]
+}

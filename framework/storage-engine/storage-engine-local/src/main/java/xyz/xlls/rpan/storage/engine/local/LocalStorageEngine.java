@@ -5,6 +5,7 @@ import org.springframework.stereotype.Component;
 import xyz.xlls.rpan.core.utils.FileUtil;
 import xyz.xlls.rpan.storage.engine.core.AbstractStorageEngine;
 import xyz.xlls.rpan.storage.engine.core.context.DeleteFileContext;
+import xyz.xlls.rpan.storage.engine.core.context.StoreFileChunkContext;
 import xyz.xlls.rpan.storage.engine.core.context.StoreFileContext;
 import xyz.xlls.rpan.storage.engine.local.config.LocalStoreEngineConfig;
 
@@ -29,5 +30,13 @@ public class LocalStorageEngine extends AbstractStorageEngine {
     @Override
     protected void doDelete(DeleteFileContext context) throws IOException {
         FileUtil.deleteFiles(context.getRealFilePathList());
+    }
+
+    @Override
+    protected void doStoreChunk(StoreFileChunkContext context) throws IOException{
+        String basePath=localStoreEngineConfig.getRootFileChunkPath();
+        String realFilePath=FileUtil.generateStoreFileChunkRealPath(basePath,context.getIdentifier(), context.getChunkNumber());
+        FileUtil.writeStream2File(context.getInputStream(),new File(realFilePath),context.getTotalSize());
+        context.setRealPath(realFilePath);
     }
 }

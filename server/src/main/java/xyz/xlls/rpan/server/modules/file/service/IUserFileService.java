@@ -3,6 +3,7 @@ package xyz.xlls.rpan.server.modules.file.service;
 import xyz.xlls.rpan.server.modules.file.context.*;
 import xyz.xlls.rpan.server.modules.file.entity.RPanUserFile;
 import com.baomidou.mybatisplus.extension.service.IService;
+import xyz.xlls.rpan.server.modules.file.vo.FileChunkUploadVO;
 import xyz.xlls.rpan.server.modules.file.vo.RPanUserFileVo;
 
 import java.util.List;
@@ -58,4 +59,11 @@ public interface IUserFileService extends IService<RPanUserFile> {
      * @param context
      */
     void upload(FileUploadContext context);
+
+    /**
+     * 文件分片上传
+     * @param context
+     * @return
+     */
+    FileChunkUploadVO chunkUpload(FileChunkUploadContext context);
 }

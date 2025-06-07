@@ -5,6 +5,12 @@
       "type": "java.lang.String",
       "description": "文件上传根目录",
       "defaultValue": "@see xyz.xlls.rpan.core.utils.FileUtil.generateDefaultStoreFileRealPath"
+    },
+    {
+      "name": "xyz.xlls.rpan.storage.engine.local.root-file-chunk-path",
+      "type": "java.lang.String",
+      "description": "文件分片上传根目录",
+      "defaultValue": "@see xyz.xlls.rpan.core.utils.FileUtil.generateDefaultStoreFileChunkRealPath"
     }
   ]
 }
