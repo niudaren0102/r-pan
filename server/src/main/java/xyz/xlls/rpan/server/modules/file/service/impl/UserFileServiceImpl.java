@@ -243,6 +243,36 @@ public class UserFileServiceImpl extends ServiceImpl<RPanUserFileMapper, RPanUse
     }
 
     /**
+     * 文件分片合并
+     * 1、文件分片物理合并
+     * 2、保存文件实体记录
+     * 3、保存文件用户关系映射
+     * @param context
+     */
+    @Override
+    public void mergeFile(FileChunkMergeContext context) {
+        mergeFileChunkAndSaveFile(context);
+        saveUserFile(
+                context.getParentId(),
+                context.getFilename(),
+                FolderFlagEnum.NO,
+                FileTypeEnum.getFileTypeCode(FileUtil.getFileSuffix(context.getFilename())),
+                context.getRecord().getFileId(),
+                context.getUserId(),
+                context.getRecord().getFileSizeDesc());
+    }
+
+    /**
+     * 合并文件分片并保存物理记录
+     * @param context
+     */
+    private void mergeFileChunkAndSaveFile(FileChunkMergeContext context) {
+        FileChunkMergeAndSaveContext fileChunkMergeAndSaveContext=fileConverter.fileChunkMergeContext2FileChunkMergeAndSaveContext(context);
+        fileService.mergeFileChunkAndSaveFile(fileChunkMergeAndSaveContext);
+        context.setRecord(fileChunkMergeAndSaveContext.getRecord());
+    }
+
+    /**
      * 删除文件之前的前置校验
      * 1、文件ID合法校验
      * 2、用户具有删除该文件的权限

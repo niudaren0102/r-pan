@@ -9,7 +9,9 @@ import xyz.xlls.rpan.core.utils.IdUtil;
 import xyz.xlls.rpan.server.common.config.PanServerConfig;
 import xyz.xlls.rpan.server.modules.file.context.FileChunkSaveContext;
 import xyz.xlls.rpan.server.modules.file.context.QueryUploadedChunksContext;
+import xyz.xlls.rpan.server.modules.file.context.QueryUploadedChunksRecordContext;
 import xyz.xlls.rpan.server.modules.file.converter.FileConverter;
+import xyz.xlls.rpan.server.modules.file.entity.RPanFile;
 import xyz.xlls.rpan.server.modules.file.entity.RPanFileChunk;
 import xyz.xlls.rpan.server.modules.file.enums.MergeFlagEnum;
 import xyz.xlls.rpan.server.modules.file.service.IFileChunkService;
@@ -63,6 +65,15 @@ public class FileChunkServiceImpl extends ServiceImpl<RPanFileChunkMapper, RPanF
         queryWrapper.eq(RPanFileChunk::getCreateUser, context.getUserId());
         queryWrapper.gt(RPanFileChunk::getExpirationTime, new Date());
         return listObjs(queryWrapper,value->(Integer) value);
+    }
+
+    @Override
+    public List<RPanFileChunk> queryUploadedChunksRecord(QueryUploadedChunksRecordContext queryUploadedChunksContext) {
+        LambdaQueryWrapper<RPanFileChunk> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(RPanFileChunk::getIdentifier, queryUploadedChunksContext.getIdentifier());
+        queryWrapper.eq(RPanFileChunk::getCreateUser, queryUploadedChunksContext.getUserId());
+        queryWrapper.gt(RPanFileChunk::getExpirationTime, new Date());
+        return this.list(queryWrapper);
     }
 
     /**

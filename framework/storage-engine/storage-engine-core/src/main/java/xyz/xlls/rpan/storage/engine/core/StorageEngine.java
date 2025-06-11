@@ -1,6 +1,7 @@
 package xyz.xlls.rpan.storage.engine.core;
 
 import xyz.xlls.rpan.storage.engine.core.context.DeleteFileContext;
+import xyz.xlls.rpan.storage.engine.core.context.MergeFileContext;
 import xyz.xlls.rpan.storage.engine.core.context.StoreFileChunkContext;
 import xyz.xlls.rpan.storage.engine.core.context.StoreFileContext;
 
@@ -31,5 +32,11 @@ public interface StorageEngine {
      */
     void storeChunk(StoreFileChunkContext context) throws IOException;
 
+    /**
+     * 合并文件分片
+     * @param context
+     * @throws IOException
+     */
+    void mergeFile(MergeFileContext context) throws  IOException;
 
 }

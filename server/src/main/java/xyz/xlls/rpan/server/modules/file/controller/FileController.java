@@ -144,8 +144,8 @@ public class FileController {
         return R.data(vo);
     }
     @ApiOperation(
-            value = "文件分片检查",
-            notes = "该接口提供了文件分片检查的功能",
+            value = "查询已经上传的文件分片列表",
+            notes = "该接口提供了查询已经上传的文件分片列表的功能",
             consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE,
             produces = MediaType.APPLICATION_JSON_VALUE
     )
@@ -155,4 +155,17 @@ public class FileController {
         UploadedChunksVO vo=userFileService.getUploadedChunks(context);
         return R.data(vo);
     }
+    @ApiOperation(
+            value = "文件分片合并",
+            notes = "该接口提供了文件分片合并的功能",
+            consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE,
+            produces = MediaType.APPLICATION_JSON_VALUE
+    )
+    @GetMapping("file/merge")
+    public R mergeFile(@Validated @RequestBody FileChunkMergePO fileChunkMergePO){
+        FileChunkMergeContext context=fileConverter.fileChunkMergePO2FileChunkMergeContext(fileChunkMergePO);
+        userFileService.mergeFile(context);
+        return R.success();
+    }
+
 }

@@ -3,6 +3,7 @@ package xyz.xlls.rpan.storage.engine.oss;
 import org.springframework.stereotype.Component;
 import xyz.xlls.rpan.storage.engine.core.AbstractStorageEngine;
 import xyz.xlls.rpan.storage.engine.core.context.DeleteFileContext;
+import xyz.xlls.rpan.storage.engine.core.context.MergeFileContext;
 import xyz.xlls.rpan.storage.engine.core.context.StoreFileChunkContext;
 import xyz.xlls.rpan.storage.engine.core.context.StoreFileContext;
 
@@ -24,7 +25,12 @@ public class OSSStorageEngine extends AbstractStorageEngine {
     }
 
     @Override
-    protected void doStoreChunk(StoreFileChunkContext context) {
+    protected void doStoreChunk(StoreFileChunkContext context) throws IOException{
+
+    }
+
+    @Override
+    protected void doMergeFile(MergeFileContext context) throws IOException{
 
     }
 }

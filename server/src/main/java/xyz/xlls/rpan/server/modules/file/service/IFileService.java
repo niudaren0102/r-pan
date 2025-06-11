@@ -1,5 +1,6 @@
 package xyz.xlls.rpan.server.modules.file.service;
 
+import xyz.xlls.rpan.server.modules.file.context.FileChunkMergeAndSaveContext;
 import xyz.xlls.rpan.server.modules.file.entity.RPanFile;
 import com.baomidou.mybatisplus.extension.service.IService;
 import xyz.xlls.rpan.server.modules.file.context.FileSaveContext;
@@ -25,4 +26,10 @@ public interface IFileService extends IService<RPanFile> {
      * @param context
      */
     void saveFile(FileSaveContext context);
+
+    /**
+     * 合并物理文件分片并保存文件实体记录
+     * @param fileChunkMergeAndSaveContext
+     */
+    void mergeFileChunkAndSaveFile(FileChunkMergeAndSaveContext fileChunkMergeAndSaveContext);
 }
