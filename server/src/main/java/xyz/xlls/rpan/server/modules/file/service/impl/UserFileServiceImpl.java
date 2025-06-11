@@ -223,7 +223,6 @@ public class UserFileServiceImpl extends ServiceImpl<RPanUserFileMapper, RPanUse
         fileChunkService.saveChunkFile(fileChunkSaveContext);
         FileChunkUploadVO vo=new FileChunkUploadVO();
         vo.setMergeFlag(fileChunkSaveContext.getMergeFlagEnum().getCode());
-
         return vo;
     }
 

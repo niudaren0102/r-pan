@@ -129,6 +129,7 @@ public class FileChunkServiceImpl extends ServiceImpl<RPanFileChunkMapper, RPanF
             StoreFileChunkContext context=fileConverter.fileChunkSaveContext2StoreFileChunkContext(fileChunkSaveContext);
             context.setInputStream(fileChunkSaveContext.getFile().getInputStream());
             localStorageEngine.storeChunk(context);
+            fileChunkSaveContext.setRealPath(context.getRealPath());
         }catch (IOException e){
             e.printStackTrace();
             throw new RPanBusinessException("文件分片上传失败");

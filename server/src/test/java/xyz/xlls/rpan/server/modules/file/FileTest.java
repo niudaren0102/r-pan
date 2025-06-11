@@ -2,6 +2,7 @@ package xyz.xlls.rpan.server.modules.file;
 
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.lang.Assert;
+import lombok.AllArgsConstructor;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,9 +19,11 @@ import xyz.xlls.rpan.server.modules.file.context.*;
 import xyz.xlls.rpan.server.modules.file.entity.RPanFile;
 import xyz.xlls.rpan.server.modules.file.entity.RPanFileChunk;
 import xyz.xlls.rpan.server.modules.file.enums.DelFlagEnum;
+import xyz.xlls.rpan.server.modules.file.enums.MergeFlagEnum;
 import xyz.xlls.rpan.server.modules.file.service.IFileChunkService;
 import xyz.xlls.rpan.server.modules.file.service.IFileService;
 import xyz.xlls.rpan.server.modules.file.service.IUserFileService;
+import xyz.xlls.rpan.server.modules.file.vo.FileChunkUploadVO;
 import xyz.xlls.rpan.server.modules.user.context.UserLoginContext;
 import xyz.xlls.rpan.server.modules.user.context.UserRegisterContext;
 import xyz.xlls.rpan.server.modules.user.service.IUserService;
@@ -30,6 +33,8 @@ import xyz.xlls.rpan.server.modules.user.vo.UserInfoVO;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
+import java.util.concurrent.CountDownLatch;
 
 /**
  * 文件模块单元测试类
@@ -356,10 +361,79 @@ public class FileTest {
     }
 
     /**
+     * 测试文件分片上传成功
+     */
+    @Test
+    public void uploadWithChunkTest() throws InterruptedException {
+        Long userId = register();
+        UserInfoVO info = info(userId);
+        CountDownLatch countDownLatch=new CountDownLatch(10);
+        for (int i = 0; i < 10; i++){
+            new ChunkUploader(
+                    countDownLatch,
+                    i+1,
+                    10,
+                    userFileService,
+                    userId,
+                    info.getRootFileId()
+            ).start();
+        }
+        countDownLatch.await();
+    }
+
+    /**
+     * 文件分片上传器
+     */
+    @AllArgsConstructor
+    private static class ChunkUploader extends Thread{
+        private CountDownLatch countDownLatch;
+        private Integer chunk;
+        private Integer chunks;
+        private IUserFileService userFileService;
+        private Long userId;
+        private Long parentId;
+
+        /**
+         * 1、上传文件分片
+         * 2、根据上传的结果调用文件分片合并
+         */
+        @Override
+        public void run() {
+            super.run();
+            MultipartFile file = genarateMultipartFile();
+            Long totalSize=file.getSize()*chunks;
+            String filename="test.txt";
+            String identifier="123456789";
+            FileChunkUploadContext fileChunkUploadContext=new FileChunkUploadContext();
+            fileChunkUploadContext.setFilename(filename);
+            fileChunkUploadContext.setIdentifier(identifier);
+            fileChunkUploadContext.setTotalChunks(chunks);
+            fileChunkUploadContext.setChunkNumber(chunk);
+            fileChunkUploadContext.setCurrentChunkSize(file.getSize());
+            fileChunkUploadContext.setTotalSize(totalSize);
+            fileChunkUploadContext.setFile(file);
+            fileChunkUploadContext.setUserId(userId);
+            FileChunkUploadVO fileChunkUploadVO = userFileService.chunkUpload(fileChunkUploadContext);
+            if (Objects.equals(fileChunkUploadVO.getMergeFlag(),MergeFlagEnum.READY.getCode())){
+                System.out.println("分片"+chunk+"检测到可以合并分片");
+                FileChunkMergeContext fileChunkMergeContext=new FileChunkMergeContext();
+                fileChunkMergeContext.setFilename(filename);
+                fileChunkMergeContext.setIdentifier(identifier);
+                fileChunkMergeContext.setTotalSize(totalSize);
+                fileChunkMergeContext.setUserId(userId);
+                fileChunkMergeContext.setParentId(parentId);
+                userFileService.mergeFile(fileChunkMergeContext);
+                countDownLatch.countDown();
+            }else{
+                countDownLatch.countDown();
+            }
+        }
+    }
+    /**
      * 生成模拟的网络文件实体
      * @return
      */
-    private MultipartFile genarateMultipartFile() {
+    private static MultipartFile genarateMultipartFile() {
         MultipartFile file=null;
         try {
             file=new MockMultipartFile("file", "test.txt", "multipart/form-data", "test".getBytes("UTF-8"));
