@@ -303,6 +303,41 @@ public class UserFileServiceImpl extends ServiceImpl<RPanUserFileMapper, RPanUse
     }
 
     /**
+     * 文件预览
+     * 1、参数校验：文件是否存在，文件是否属于该用户
+     * 2、校验该文件是不是一个文件夹
+     * 3、执行预览的动作
+     * @param context
+     */
+    @Override
+    public void preview(FilePreviewContext context) {
+        RPanUserFile record = this.getById(context.getFileId());
+        checkOperatePermission(record, context.getUserId());
+        if (checkIsFolder(record)) {
+            throw new RPanBusinessException("文件夹暂不支持预览");
+        }
+        doPreview(record, context.getResponse());
+    }
+
+    /**
+     * 执行文件预览的动作
+     * 1、查询文件的真实存储路径
+     * 2、添加跨域的公共响应头
+     * 3、委托文件存储引擎去读取文件内容到响应的输出流中
+     * @param record
+     * @param response
+     */
+    private void doPreview(RPanUserFile record, HttpServletResponse response) {
+        Long realFileId = record.getRealFileId();
+        RPanFile rPanFile = fileService.getById(realFileId);
+        if(Objects.isNull(rPanFile)){
+            throw new RPanBusinessException("当前的文件记录不存在");
+        }
+        addCommonResponseHeader(response, rPanFile.getFilePreviewContentType());
+        realFile2OutputStream(rPanFile.getRealPath(),response);
+    }
+
+    /**
      * 执行文件下载的动作
      * 1、查询文件的真实存储路径
      * 2、添加跨域的公共响应头

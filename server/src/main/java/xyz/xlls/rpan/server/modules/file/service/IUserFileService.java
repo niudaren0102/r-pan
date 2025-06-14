@@ -86,4 +86,10 @@ public interface IUserFileService extends IService<RPanUserFile> {
      * @param context
      */
     void download(FileDownloadContext context);
+
+    /**
+     * 文件预览
+     * @param filePreviewContext
+     */
+    void preview(FilePreviewContext filePreviewContext);
 }
