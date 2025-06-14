@@ -17,6 +17,7 @@ import xyz.xlls.rpan.server.modules.file.enums.DelFlagEnum;
 import xyz.xlls.rpan.server.modules.file.po.*;
 import xyz.xlls.rpan.server.modules.file.service.IUserFileService;
 import xyz.xlls.rpan.server.modules.file.vo.FileChunkUploadVO;
+import xyz.xlls.rpan.server.modules.file.vo.FolderTreeNodeVO;
 import xyz.xlls.rpan.server.modules.file.vo.RPanUserFileVo;
 import xyz.xlls.rpan.server.modules.file.vo.UploadedChunksVO;
 
@@ -172,7 +173,7 @@ public class FileController {
             value = "文件下载",
             notes = "该接口提供了文件下载的功能",
             consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE,
-            produces = MediaType.APPLICATION_JSON_VALUE
+            produces = MediaType.APPLICATION_OCTET_STREAM_VALUE
     )
     @GetMapping("file/download")
     public void download(@NotBlank(message = "文件ID不能为空") @RequestParam(value = "fileId",required = false) String  fileId,
@@ -188,7 +189,7 @@ public class FileController {
             value = "文件预览",
             notes = "该接口提供了文件预览的功能",
             consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE,
-            produces = MediaType.APPLICATION_JSON_VALUE
+            produces = MediaType.APPLICATION_OCTET_STREAM_VALUE
     )
     @GetMapping("file/preview")
     public void preview(@NotBlank(message = "文件ID不能为空") @RequestParam(value = "fileId",required = false) String  fileId,
@@ -198,6 +199,20 @@ public class FileController {
         filePreviewContext.setResponse(response);
         filePreviewContext.setUserId(UserIdUtil.get());
         userFileService.preview(filePreviewContext);
+    }
+
+    @ApiOperation(
+            value = "查询文件夹树",
+            notes = "该接口提供了查询文件夹树的功能",
+            consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE,
+            produces = MediaType.APPLICATION_JSON_UTF8_VALUE
+    )
+    @GetMapping("file/folder/tree")
+    public R<List<FolderTreeNodeVO>> getFolderTree(){
+        QueryFolderTreeContext queryFolderTreeContext=new QueryFolderTreeContext();
+        queryFolderTreeContext.setUserId(UserIdUtil.get());
+        List<FolderTreeNodeVO> result=userFileService.getFolderTree(queryFolderTreeContext);
+        return R.data(result);
     }
 
 }

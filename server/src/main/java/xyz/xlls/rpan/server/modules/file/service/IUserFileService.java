@@ -4,6 +4,7 @@ import xyz.xlls.rpan.server.modules.file.context.*;
 import xyz.xlls.rpan.server.modules.file.entity.RPanUserFile;
 import com.baomidou.mybatisplus.extension.service.IService;
 import xyz.xlls.rpan.server.modules.file.vo.FileChunkUploadVO;
+import xyz.xlls.rpan.server.modules.file.vo.FolderTreeNodeVO;
 import xyz.xlls.rpan.server.modules.file.vo.RPanUserFileVo;
 import xyz.xlls.rpan.server.modules.file.vo.UploadedChunksVO;
 
@@ -92,4 +93,11 @@ public interface IUserFileService extends IService<RPanUserFile> {
      * @param filePreviewContext
      */
     void preview(FilePreviewContext filePreviewContext);
+
+    /**
+     *  查询用户的文件夹树
+     * @param queryFolderTreeContext
+     * @return
+     */
+    List<FolderTreeNodeVO> getFolderTree(QueryFolderTreeContext queryFolderTreeContext);
 }

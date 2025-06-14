@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.apache.commons.lang3.StringUtils;
+import org.assertj.core.util.Lists;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
@@ -31,6 +32,7 @@ import xyz.xlls.rpan.server.modules.file.service.IUserFileService;
 import xyz.xlls.rpan.server.modules.file.mapper.RPanUserFileMapper;
 import org.springframework.stereotype.Service;
 import xyz.xlls.rpan.server.modules.file.vo.FileChunkUploadVO;
+import xyz.xlls.rpan.server.modules.file.vo.FolderTreeNodeVO;
 import xyz.xlls.rpan.server.modules.file.vo.RPanUserFileVo;
 import xyz.xlls.rpan.server.modules.file.vo.UploadedChunksVO;
 import xyz.xlls.rpan.storage.engine.core.StorageEngine;
@@ -39,10 +41,7 @@ import xyz.xlls.rpan.storage.engine.core.context.ReadFileContext;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
-import java.util.Date;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -317,6 +316,53 @@ public class UserFileServiceImpl extends ServiceImpl<RPanUserFileMapper, RPanUse
             throw new RPanBusinessException("文件夹暂不支持预览");
         }
         doPreview(record, context.getResponse());
+    }
+
+    /**
+     * 查询用户的文件夹树
+     * 1、查询该用户的所有文件夹列表
+     * 2、在内存中拼装文件夹树
+     * @param queryFolderTreeContext
+     * @return
+     */
+    @Override
+    public List<FolderTreeNodeVO> getFolderTree(QueryFolderTreeContext queryFolderTreeContext) {
+        List<RPanUserFile> record=queryFolderRecords(queryFolderTreeContext.getUserId());
+        List<FolderTreeNodeVO> result=assembleFolderTreeNodeVOList(record);
+        return result;
+    }
+
+    /**
+     * 拼装文件夹树列表
+     * @param record
+     * @return
+     */
+    private List<FolderTreeNodeVO> assembleFolderTreeNodeVOList(List<RPanUserFile> record) {
+        if(CollectionUtil.isEmpty(record)){
+            return Lists.newArrayList();
+        }
+        List<FolderTreeNodeVO> mappedFolderTreeNodeVOList = record.stream().map(fileConverter::rPanUserFile2FolderTreeNodeVO).collect(Collectors.toList());
+        Map<Long, List<FolderTreeNodeVO>> mappedFolderTreeNodeVOMap = mappedFolderTreeNodeVOList.stream().collect(Collectors.groupingBy(FolderTreeNodeVO::getParentId));
+        for (FolderTreeNodeVO folderTreeNodeVO : mappedFolderTreeNodeVOList) {
+            List<FolderTreeNodeVO> children = mappedFolderTreeNodeVOMap.get(folderTreeNodeVO.getId());
+            if(CollectionUtil.isNotEmpty(children)){
+                folderTreeNodeVO.getChildren().addAll(children);
+            }
+        }
+        return mappedFolderTreeNodeVOList.stream().filter(folderTreeNodeVO -> Objects.equals(folderTreeNodeVO.getParentId(),FileConstants.TOP_PARENT_ID)).collect(Collectors.toList());
+    }
+
+    /**
+     * 查询用户所有有效的文件夹信息
+     * @param userId
+     * @return
+     */
+    private List<RPanUserFile> queryFolderRecords(Long userId) {
+        LambdaQueryWrapper<RPanUserFile> queryWrapper=new LambdaQueryWrapper<>();
+        queryWrapper.eq(RPanUserFile::getUserId,userId);
+        queryWrapper.eq(RPanUserFile::getDelFlag,DelFlagEnum.NO.getCode());
+        queryWrapper.eq(RPanUserFile::getFolderFlag, FolderFlagEnum.YES.getCode());
+        return this.list(queryWrapper);
     }
 
     /**

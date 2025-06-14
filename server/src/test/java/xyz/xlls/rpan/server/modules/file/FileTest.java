@@ -24,6 +24,7 @@ import xyz.xlls.rpan.server.modules.file.service.IFileChunkService;
 import xyz.xlls.rpan.server.modules.file.service.IFileService;
 import xyz.xlls.rpan.server.modules.file.service.IUserFileService;
 import xyz.xlls.rpan.server.modules.file.vo.FileChunkUploadVO;
+import xyz.xlls.rpan.server.modules.file.vo.FolderTreeNodeVO;
 import xyz.xlls.rpan.server.modules.user.context.UserLoginContext;
 import xyz.xlls.rpan.server.modules.user.context.UserRegisterContext;
 import xyz.xlls.rpan.server.modules.user.service.IUserService;
@@ -381,6 +382,32 @@ public class FileTest {
         countDownLatch.await();
     }
 
+    /**
+     * 测试文件夹树查询
+     */
+    @Test
+    public void getFolderTreeNodeVOListTese(){
+        Long userId = register();
+        UserInfoVO info = info(userId);
+        CreateFolderContext context=new CreateFolderContext();
+        context.setParentId(info.getRootFileId());
+        context.setUserId(userId);
+        context.setFolderName("test-1");
+        Long fileId = userFileService.createFolder(context);
+        Assert.notNull(fileId);
+        context.setFolderName("test-2");
+        fileId = userFileService.createFolder(context);
+        Assert.notNull(fileId);
+        context.setFolderName("test-2-1");
+        context.setParentId(fileId);
+        fileId = userFileService.createFolder(context);
+        Assert.notNull(fileId);
+        QueryFolderTreeContext queryFolderTreeContext=new QueryFolderTreeContext();
+        queryFolderTreeContext.setUserId(userId);
+        List<FolderTreeNodeVO> folderTreeNodeVOList = userFileService.getFolderTree(queryFolderTreeContext);
+        Assert.isTrue(folderTreeNodeVOList.size()==1);
+        folderTreeNodeVOList.forEach(FolderTreeNodeVO::print);
+    }
     /**
      * 文件分片上传器
      */
