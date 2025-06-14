@@ -4,13 +4,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import xyz.xlls.rpan.core.utils.FileUtil;
 import xyz.xlls.rpan.storage.engine.core.AbstractStorageEngine;
-import xyz.xlls.rpan.storage.engine.core.context.DeleteFileContext;
-import xyz.xlls.rpan.storage.engine.core.context.MergeFileContext;
-import xyz.xlls.rpan.storage.engine.core.context.StoreFileChunkContext;
-import xyz.xlls.rpan.storage.engine.core.context.StoreFileContext;
+import xyz.xlls.rpan.storage.engine.core.context.*;
 import xyz.xlls.rpan.storage.engine.local.config.LocalStoreEngineConfig;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.List;
@@ -62,5 +60,16 @@ public class LocalStorageEngine extends AbstractStorageEngine {
             FileUtil.appendWrite(Paths.get(realFilePath),new File(chunkRealPath).toPath());
         }
         FileUtil.deleteFiles(chunkRealPathList);
+    }
+
+    /**
+     * 读取文件内容并写入到输出流
+     * @param context
+     * @throws IOException
+     */
+    @Override
+    protected void doReadFile(ReadFileContext context) throws IOException {
+        File file = new File(context.getRealPath());
+        FileUtil.writeFile2OutputStream(new FileInputStream(file),context.getOutputStream(),file.length());
     }
 }

@@ -1,9 +1,6 @@
 package xyz.xlls.rpan.storage.engine.core;
 
-import xyz.xlls.rpan.storage.engine.core.context.DeleteFileContext;
-import xyz.xlls.rpan.storage.engine.core.context.MergeFileContext;
-import xyz.xlls.rpan.storage.engine.core.context.StoreFileChunkContext;
-import xyz.xlls.rpan.storage.engine.core.context.StoreFileContext;
+import xyz.xlls.rpan.storage.engine.core.context.*;
 
 import java.io.IOException;
 
@@ -39,4 +36,10 @@ public interface StorageEngine {
      */
     void mergeFile(MergeFileContext context) throws  IOException;
 
+    /**
+     * 读取文件内容写入到输出流中
+     * @param context
+     * @throws IOException
+     */
+    void readFile(ReadFileContext context)throws IOException;
 }

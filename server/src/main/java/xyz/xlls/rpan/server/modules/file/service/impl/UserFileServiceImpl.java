@@ -9,12 +9,14 @@ import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
+import org.springframework.http.MediaType;
 import org.springframework.transaction.annotation.Transactional;
 import xyz.xlls.rpan.core.constants.RPanConstants;
 import xyz.xlls.rpan.core.exception.RPanBusinessException;
 import xyz.xlls.rpan.core.utils.FileUtil;
 import xyz.xlls.rpan.core.utils.IdUtil;
 import xyz.xlls.rpan.server.common.event.file.DeleteFileEvent;
+import xyz.xlls.rpan.server.common.utils.HttpUtil;
 import xyz.xlls.rpan.server.modules.file.constants.FileConstants;
 import xyz.xlls.rpan.server.modules.file.context.*;
 import xyz.xlls.rpan.server.modules.file.converter.FileConverter;
@@ -31,7 +33,12 @@ import org.springframework.stereotype.Service;
 import xyz.xlls.rpan.server.modules.file.vo.FileChunkUploadVO;
 import xyz.xlls.rpan.server.modules.file.vo.RPanUserFileVo;
 import xyz.xlls.rpan.server.modules.file.vo.UploadedChunksVO;
+import xyz.xlls.rpan.storage.engine.core.StorageEngine;
+import xyz.xlls.rpan.storage.engine.core.context.ReadFileContext;
 
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
@@ -39,13 +46,13 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
-* @author Administrator
-* @description 针对表【r_pan_user_file(用户文件信息表)】的数据库操作Service实现
-* @createDate 2024-10-22 15:04:09
-*/
+ * @author Administrator
+ * @description 针对表【r_pan_user_file(用户文件信息表)】的数据库操作Service实现
+ * @createDate 2024-10-22 15:04:09
+ */
 @Service
 public class UserFileServiceImpl extends ServiceImpl<RPanUserFileMapper, RPanUserFile>
-    implements IUserFileService, ApplicationContextAware {
+        implements IUserFileService, ApplicationContextAware {
     private ApplicationContext applicationContext;
     @Autowired
     private IFileService fileService;
@@ -53,8 +60,12 @@ public class UserFileServiceImpl extends ServiceImpl<RPanUserFileMapper, RPanUse
     private FileConverter fileConverter;
     @Autowired
     private IFileChunkService fileChunkService;
+    @Autowired
+    private StorageEngine storageEngine;
+
     /**
      * 创建文件夹信息
+     *
      * @param context
      * @return
      */
@@ -71,6 +82,7 @@ public class UserFileServiceImpl extends ServiceImpl<RPanUserFileMapper, RPanUse
 
     /**
      * 获取文件根目录信息
+     *
      * @param userId
      * @return
      */
@@ -78,14 +90,15 @@ public class UserFileServiceImpl extends ServiceImpl<RPanUserFileMapper, RPanUse
     public RPanUserFile getUserRootFile(Long userId) {
         LambdaQueryWrapper<RPanUserFile> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(RPanUserFile::getUserId, userId);
-        queryWrapper.eq(RPanUserFile::getParentId,FileConstants.TOP_PARENT_ID);
-        queryWrapper.eq(RPanUserFile::getDelFlag,DelFlagEnum.NO.getCode());
-        queryWrapper.eq(RPanUserFile::getFolderFlag,FolderFlagEnum.YES.getCode());
+        queryWrapper.eq(RPanUserFile::getParentId, FileConstants.TOP_PARENT_ID);
+        queryWrapper.eq(RPanUserFile::getDelFlag, DelFlagEnum.NO.getCode());
+        queryWrapper.eq(RPanUserFile::getFolderFlag, FolderFlagEnum.YES.getCode());
         return this.getOne(queryWrapper);
     }
 
     /**
      * 查询用户的文件列表
+     *
      * @param context
      * @return
      */
@@ -98,6 +111,7 @@ public class UserFileServiceImpl extends ServiceImpl<RPanUserFileMapper, RPanUse
      * 更新文件名称
      * 1、校验更新文件名称的条件
      * 2、执行更新文件名称的操作
+     *
      * @param context
      */
     @Override
@@ -111,6 +125,7 @@ public class UserFileServiceImpl extends ServiceImpl<RPanUserFileMapper, RPanUse
      * 1、校验删除的条件是否符合
      * 2、执行批量删除的动作
      * 3、发布批量删除文件的事件、给其他模块订阅使用
+     *
      * @param context
      */
     @Override
@@ -121,17 +136,18 @@ public class UserFileServiceImpl extends ServiceImpl<RPanUserFileMapper, RPanUse
     }
 
     /**
-     *  文件秒传
-     *  1、通过文件的唯一标识，查找对应的实体文件记录
-     *  2、如果没有查到，直接返回秒传失败
-     *  3、如果查到记录，直接挂载关联管理，返回秒传成功即可
+     * 文件秒传
+     * 1、通过文件的唯一标识，查找对应的实体文件记录
+     * 2、如果没有查到，直接返回秒传失败
+     * 3、如果查到记录，直接挂载关联管理，返回秒传成功即可
+     *
      * @param context
      * @return
      */
     @Override
     public boolean secUpload(SecUploadContext context) {
-        RPanFile record=getFileByUserIdAndIdentifier(context.getUserId(), context.getIdentifier());
-        if(Objects.isNull(record)){
+        RPanFile record = getFileByUserIdAndIdentifier(context.getUserId(), context.getIdentifier());
+        if (Objects.isNull(record)) {
             return false;
         }
         saveUserFile(context.getParentId(),
@@ -148,6 +164,7 @@ public class UserFileServiceImpl extends ServiceImpl<RPanUserFileMapper, RPanUse
      * 单文件上传
      * 1、上传文件并保存实体文件记录
      * 2、保存用户文件的关系记录
+     *
      * @param context
      */
     @Override
@@ -168,17 +185,18 @@ public class UserFileServiceImpl extends ServiceImpl<RPanUserFileMapper, RPanUse
     /**
      * 上传文件并保存实体文件记录
      * 委托给实体文件的Service去完成该操作
+     *
      * @param context
      */
     private void saveFile(FileUploadContext context) {
-        FileSaveContext fileSaveContext=fileConverter.fileUploadContext2FileSaveContext(context);
+        FileSaveContext fileSaveContext = fileConverter.fileUploadContext2FileSaveContext(context);
         fileService.saveFile(fileSaveContext);
         context.setRecord(fileSaveContext.getRecord());
     }
 
     private RPanFile getFileByUserIdAndIdentifier(Long userId, String identifier) {
-        List<RPanFile> records= fileService.getFileByUserIdAndIdentifier(userId, identifier);
-        if(CollectionUtil.isEmpty(records)){
+        List<RPanFile> records = fileService.getFileByUserIdAndIdentifier(userId, identifier);
+        if (CollectionUtil.isEmpty(records)) {
             return null;
         }
         return records.get(RPanConstants.ZERO_INT);
@@ -187,41 +205,44 @@ public class UserFileServiceImpl extends ServiceImpl<RPanUserFileMapper, RPanUse
     /**
      * 文件删除的后置操作
      * 1、对外发布文件删除的事件
+     *
      * @param context
      */
     private void afterFileDelete(DeleteFileContext context) {
-        DeleteFileEvent deleteFileEvent = new DeleteFileEvent(this,context.getFileIdList());
+        DeleteFileEvent deleteFileEvent = new DeleteFileEvent(this, context.getFileIdList());
         applicationContext.publishEvent(deleteFileEvent);
     }
 
     /**
      * 执行删除文件的后置操作
+     *
      * @param context
      */
     private void doDeleteFile(DeleteFileContext context) {
         List<Long> fileIdList = context.getFileIdList();
         LambdaUpdateWrapper<RPanUserFile> updateWrapper = new LambdaUpdateWrapper<>();
-        updateWrapper.in(RPanUserFile::getFileId,  fileIdList);
-        updateWrapper.set(RPanUserFile::getDelFlag,DelFlagEnum.YES.getCode());
-        updateWrapper.set(RPanUserFile::getUpdateTime,new Date());
-        if(!this.update(updateWrapper)){
+        updateWrapper.in(RPanUserFile::getFileId, fileIdList);
+        updateWrapper.set(RPanUserFile::getDelFlag, DelFlagEnum.YES.getCode());
+        updateWrapper.set(RPanUserFile::getUpdateTime, new Date());
+        if (!this.update(updateWrapper)) {
             throw new RPanBusinessException("文件删除失败");
         }
     }
 
     /**
-     *  文件分片上传
-     *  1、上传实体文件
-     *  2、保存分片文件记录、
-     *  3、校验是否全部分片上传完成
+     * 文件分片上传
+     * 1、上传实体文件
+     * 2、保存分片文件记录、
+     * 3、校验是否全部分片上传完成
+     *
      * @param context
      * @return
      */
     @Override
     public FileChunkUploadVO chunkUpload(FileChunkUploadContext context) {
-        FileChunkSaveContext fileChunkSaveContext=fileConverter.fileChunkUploadContext2FileChunkSaveContext(context);
+        FileChunkSaveContext fileChunkSaveContext = fileConverter.fileChunkUploadContext2FileChunkSaveContext(context);
         fileChunkService.saveChunkFile(fileChunkSaveContext);
-        FileChunkUploadVO vo=new FileChunkUploadVO();
+        FileChunkUploadVO vo = new FileChunkUploadVO();
         vo.setMergeFlag(fileChunkSaveContext.getMergeFlagEnum().getCode());
         return vo;
     }
@@ -230,12 +251,13 @@ public class UserFileServiceImpl extends ServiceImpl<RPanUserFileMapper, RPanUse
      * 查询用户已上传的分片列表
      * 1、查询已上传的分片列表
      * 2、封装返回实体
+     *
      * @param context
      * @return
      */
     @Override
     public UploadedChunksVO getUploadedChunks(QueryUploadedChunksContext context) {
-        List<Integer> uploadedChunks =fileChunkService.queryUploadedChunks(context);
+        List<Integer> uploadedChunks = fileChunkService.queryUploadedChunks(context);
         UploadedChunksVO vo = new UploadedChunksVO();
         vo.setUploadedChunks(uploadedChunks);
         return vo;
@@ -246,6 +268,7 @@ public class UserFileServiceImpl extends ServiceImpl<RPanUserFileMapper, RPanUse
      * 1、文件分片物理合并
      * 2、保存文件实体记录
      * 3、保存文件用户关系映射
+     *
      * @param context
      */
     @Override
@@ -262,11 +285,128 @@ public class UserFileServiceImpl extends ServiceImpl<RPanUserFileMapper, RPanUse
     }
 
     /**
+     * 文件下载
+     * 1、参数校验：文件是否存在，文件是否属于该用户
+     * 2、校验该文件是不是一个文件夹
+     * 3、执行下载的动作
+     *
+     * @param context
+     */
+    @Override
+    public void download(FileDownloadContext context) {
+        RPanUserFile record = this.getById(context.getFileId());
+        checkOperatePermission(record, context.getUserId());
+        if (checkIsFolder(record)) {
+            throw new RPanBusinessException("文件夹暂不支持下载");
+        }
+        doDownload(record, context.getResponse());
+    }
+
+    /**
+     * 执行文件下载的动作
+     * 1、查询文件的真实存储路径
+     * 2、添加跨域的公共响应头
+     * 3、拼装下载文件的名称、长度等响应信息
+     * 4、委托文件存储引擎去读取文件内容到响应的输出流中
+     * @param record
+     * @param response
+     */
+    private void doDownload(RPanUserFile record, HttpServletResponse response) {
+        Long realFileId = record.getRealFileId();
+        RPanFile rPanFile = fileService.getById(realFileId);
+        if(Objects.isNull(rPanFile)){
+            throw new RPanBusinessException("当前的文件记录不存在");
+        }
+        addCommonResponseHeader(response, MediaType.APPLICATION_OCTET_STREAM_VALUE);
+        addDownloadAttribute(response,record,rPanFile);
+        realFile2OutputStream(rPanFile.getRealPath(),response);
+    }
+
+    /**
+     * 委托文件存储引擎去读取内容并写出到输出流中
+     * @param realPath
+     * @param response
+     */
+    private void realFile2OutputStream(String realPath, HttpServletResponse response) {
+
+        try {
+            ReadFileContext context=new ReadFileContext();
+            context.setRealPath(realPath);
+            context.setOutputStream(response.getOutputStream());
+            storageEngine.readFile(context);
+        } catch (IOException e) {
+            e.printStackTrace();
+            throw new RPanBusinessException("文件下载失败");
+        }
+
+    }
+
+    /**
+     * 添加文件下载的属性信息
+     * @param response
+     * @param record
+     * @param rPanFile
+     */
+    private void addDownloadAttribute(HttpServletResponse response, RPanUserFile record, RPanFile rPanFile) {
+        try {
+            response.addHeader(FileConstants.CONTENT_DISPOSITION_STR,FileConstants.CONTENT_DISPOSITION_VALUE_PREFIX_STR+new String(record.getFilename().getBytes(FileConstants.GB2312_STR),FileConstants.ISO_8859_1_STR));
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+            throw new RPanBusinessException("文件下载失败");
+        }
+        response.setContentLengthLong(Long.valueOf(rPanFile.getFileSize()));
+
+    }
+
+    /**
+     * 添加公共的文件读取响应头
+     * @param response
+     * @param contentTypeValue
+     */
+    private void addCommonResponseHeader(HttpServletResponse response, String contentTypeValue) {
+        response.reset();
+        HttpUtil.addCorsResponseHeaders(response);
+        response.addHeader(FileConstants.CONTENT_TYPE_STR,contentTypeValue);
+        response.setContentType(contentTypeValue);
+    }
+
+    /**
+     * 检查当前记录是不是一个文件夹
+     *
+     * @param record
+     * @return
+     */
+    private boolean checkIsFolder(RPanUserFile record) {
+        if (Objects.isNull(record)) {
+            throw new RPanBusinessException("当前文件记录不存在");
+        }
+        return Objects.equals(record.getFolderFlag(),FolderFlagEnum.YES.getCode());
+    }
+
+    /**
+     * 校验用户的操作权限
+     * 1、文件记录继续存在
+     * 2、文件记录的创建者必须是该登录用户
+     *
+     * @param record
+     * @param userId
+     */
+    private void checkOperatePermission(RPanUserFile record, Long userId) {
+        if (Objects.isNull(record)) {
+            throw new RPanBusinessException("当前文件记录不存在");
+        }
+        if (!Objects.equals(userId, record.getUserId())) {
+            throw new RPanBusinessException("您没有该文件的操作权限");
+        }
+    }
+
+    /**
      * 合并文件分片并保存物理记录
+     *
      * @param context
      */
     private void mergeFileChunkAndSaveFile(FileChunkMergeContext context) {
-        FileChunkMergeAndSaveContext fileChunkMergeAndSaveContext=fileConverter.fileChunkMergeContext2FileChunkMergeAndSaveContext(context);
+        FileChunkMergeAndSaveContext fileChunkMergeAndSaveContext = fileConverter.fileChunkMergeContext2FileChunkMergeAndSaveContext(context);
         fileService.mergeFileChunkAndSaveFile(fileChunkMergeAndSaveContext);
         context.setRecord(fileChunkMergeAndSaveContext.getRecord());
     }
@@ -275,33 +415,35 @@ public class UserFileServiceImpl extends ServiceImpl<RPanUserFileMapper, RPanUse
      * 删除文件之前的前置校验
      * 1、文件ID合法校验
      * 2、用户具有删除该文件的权限
+     *
      * @param context
      */
     private void checkFileDeleteCondition(DeleteFileContext context) {
         List<Long> fileIdList = context.getFileIdList();
         List<RPanUserFile> rPanUserFiles = this.listByIds(fileIdList);
-        if(rPanUserFiles.size()!=fileIdList.size()){
+        if (rPanUserFiles.size() != fileIdList.size()) {
             throw new RPanBusinessException("存在不合法的文件记录");
         }
         Set<Long> fileIdSet = rPanUserFiles.stream().map(RPanUserFile::getFileId).collect(Collectors.toSet());
         int oldSize = fileIdSet.size();
         fileIdSet.addAll(fileIdList);
         int newSize = fileIdSet.size();
-        if(newSize!=oldSize){
+        if (newSize != oldSize) {
             throw new RPanBusinessException("存在不合法文件记录");
         }
         Set<Long> userIdSet = rPanUserFiles.stream().map(RPanUserFile::getUserId).collect(Collectors.toSet());
-        if(userIdSet.size()!=1){
+        if (userIdSet.size() != 1) {
             throw new RPanBusinessException("存在不合法文件记录");
         }
         Long dbUserId = userIdSet.stream().findFirst().get();
-        if(!Objects.equals(dbUserId,context.getUserId())){
+        if (!Objects.equals(dbUserId, context.getUserId())) {
             throw new RPanBusinessException("当前登录用户没有删除该文件的权限");
         }
     }
 
     /**
      * 执行文件重命名的操作
+     *
      * @param context
      */
     private void doUpdateFilename(UpdateFilenameContext context) {
@@ -309,7 +451,7 @@ public class UserFileServiceImpl extends ServiceImpl<RPanUserFileMapper, RPanUse
         entity.setFilename(context.getNewFilename());
         entity.setUserId(context.getUserId());
         entity.setUpdateTime(new Date());
-        if(!this.updateById(entity)){
+        if (!this.updateById(entity)) {
             throw new RPanBusinessException("文件重命名失败");
         }
     }
@@ -326,20 +468,20 @@ public class UserFileServiceImpl extends ServiceImpl<RPanUserFileMapper, RPanUse
     private void checkUpdateFilenameCondition(UpdateFilenameContext context) {
         Long fileId = context.getFileId();
         RPanUserFile entity = this.getById(fileId);
-        if(Objects.isNull(entity)){
+        if (Objects.isNull(entity)) {
             throw new RPanBusinessException("该文件ID无效");
         }
-        if(!Objects.equals(entity.getUserId(),context.getUserId())){
+        if (!Objects.equals(entity.getUserId(), context.getUserId())) {
             throw new RPanBusinessException("当前登录的用户没有修改改文件名称的权限");
         }
-        if(Objects.equals(entity.getFilename(),context.getNewFilename())){
+        if (Objects.equals(entity.getFilename(), context.getNewFilename())) {
             throw new RPanBusinessException("请换一个新的文件名称来修改");
         }
-        LambdaQueryWrapper<RPanUserFile> queryWrapper=new LambdaQueryWrapper<>();
-        queryWrapper.eq(RPanUserFile::getParentId,entity.getParentId());
-        queryWrapper.eq(RPanUserFile::getFilename,context.getNewFilename());
+        LambdaQueryWrapper<RPanUserFile> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(RPanUserFile::getParentId, entity.getParentId());
+        queryWrapper.eq(RPanUserFile::getFilename, context.getNewFilename());
         int count = this.count(queryWrapper);
-        if(count>0){
+        if (count > 0) {
             throw new RPanBusinessException("该文件名称已被占用");
         }
         context.setEntity(entity);
@@ -347,6 +489,7 @@ public class UserFileServiceImpl extends ServiceImpl<RPanUserFileMapper, RPanUse
     /****************************private****************************/
     /**
      * 保存用户文件的映射记录
+     *
      * @param parentId
      * @param filename
      * @param folderFlagEnum
@@ -362,9 +505,9 @@ public class UserFileServiceImpl extends ServiceImpl<RPanUserFileMapper, RPanUse
                               Integer fileType,
                               Long realFileId,
                               Long userId,
-                              String fileSizeDesc){
-        RPanUserFile entity= assembleRPanUserFile(parentId,userId,filename,folderFlagEnum,fileType,realFileId,fileSizeDesc);
-        if(!save(entity)){
+                              String fileSizeDesc) {
+        RPanUserFile entity = assembleRPanUserFile(parentId, userId, filename, folderFlagEnum, fileType, realFileId, fileSizeDesc);
+        if (!save(entity)) {
             throw new RPanBusinessException("保存文件信息失败！");
         }
         return entity.getFileId();
@@ -375,6 +518,7 @@ public class UserFileServiceImpl extends ServiceImpl<RPanUserFileMapper, RPanUse
      * 1、构建并填充实体信息
      * 2、处理文件命名一直的问题
      * a->b ,b （z）
+     *
      * @param parentId
      * @param userId
      * @param filename
@@ -384,7 +528,7 @@ public class UserFileServiceImpl extends ServiceImpl<RPanUserFileMapper, RPanUse
      * @param fileSizeDesc
      * @return
      */
-    private RPanUserFile assembleRPanUserFile(Long parentId, Long userId, String filename, FolderFlagEnum folderFlagEnum,Integer fileType, Long realFileId, String fileSizeDesc) {
+    private RPanUserFile assembleRPanUserFile(Long parentId, Long userId, String filename, FolderFlagEnum folderFlagEnum, Integer fileType, Long realFileId, String fileSizeDesc) {
         RPanUserFile entity = new RPanUserFile();
         entity.setFileId(IdUtil.get());
         entity.setUserId(userId);
@@ -407,38 +551,40 @@ public class UserFileServiceImpl extends ServiceImpl<RPanUserFileMapper, RPanUse
      * 处理用户重复名称
      * 如果统一文件夹下面由文件名称重复
      * 按照系统级规则重命名文件
+     *
      * @param entity
      */
     private void handleDuplicateFilename(RPanUserFile entity) {
-        String filename=entity.getFilename(),
-        newFilenameWithoutSuffix,
-        newFilenameSuffix;
-        int newFilenamePointPosition=filename.lastIndexOf(RPanConstants.POINT_STR);
-        if(newFilenamePointPosition==RPanConstants.MINUS_ONE_INT){
-            newFilenameWithoutSuffix=filename;
-            newFilenameSuffix=RPanConstants.EMPTY_STR;
-        }else{
-            newFilenameWithoutSuffix=filename.substring(RPanConstants.ZERO_INT,newFilenamePointPosition);
-            newFilenameSuffix=filename.replace(newFilenameWithoutSuffix, StringUtils.EMPTY);
+        String filename = entity.getFilename(),
+                newFilenameWithoutSuffix,
+                newFilenameSuffix;
+        int newFilenamePointPosition = filename.lastIndexOf(RPanConstants.POINT_STR);
+        if (newFilenamePointPosition == RPanConstants.MINUS_ONE_INT) {
+            newFilenameWithoutSuffix = filename;
+            newFilenameSuffix = RPanConstants.EMPTY_STR;
+        } else {
+            newFilenameWithoutSuffix = filename.substring(RPanConstants.ZERO_INT, newFilenamePointPosition);
+            newFilenameSuffix = filename.replace(newFilenameWithoutSuffix, StringUtils.EMPTY);
         }
-        int count=getDuplicateFilename(entity,newFilenameWithoutSuffix);
-        if(count==0){
+        int count = getDuplicateFilename(entity, newFilenameWithoutSuffix);
+        if (count == 0) {
             return;
         }
-        String newFilename=assembleNewFilename(newFilenameWithoutSuffix,count,newFilenameSuffix);
+        String newFilename = assembleNewFilename(newFilenameWithoutSuffix, count, newFilenameSuffix);
         entity.setFilename(newFilename);
     }
 
     /**
      * 拼装新文件名称
      * 拼装规则参考操作系统从夫文件名称的重命名规范
+     *
      * @param newFilenameWithoutSuffix
      * @param count
      * @param newFilenameSuffix
      * @return
      */
     private String assembleNewFilename(String newFilenameWithoutSuffix, int count, String newFilenameSuffix) {
-        String newFilename=new StringBuilder(newFilenameWithoutSuffix)
+        String newFilename = new StringBuilder(newFilenameWithoutSuffix)
                 .append(FileConstants.CN_LEFT_PARENTHESES_STR)
                 .append(count)
                 .append(FileConstants.CN_RIGHT_PARENTHESES_STR)
@@ -449,24 +595,25 @@ public class UserFileServiceImpl extends ServiceImpl<RPanUserFileMapper, RPanUse
 
     /**
      * 查找同一文件夹下面同名文件数量
+     *
      * @param entity
      * @param newFilenameWithoutSuffix
      * @return
      */
     private int getDuplicateFilename(RPanUserFile entity, String newFilenameWithoutSuffix) {
-        LambdaQueryWrapper<RPanUserFile> queryWrapper=new LambdaQueryWrapper<>();
-        queryWrapper.eq(RPanUserFile::getParentId,entity.getParentId());
-        queryWrapper.eq(RPanUserFile::getFolderFlag,entity.getFolderFlag());
-        queryWrapper.eq(RPanUserFile::getUserId,entity.getUserId());
-        queryWrapper.eq(RPanUserFile::getDelFlag,DelFlagEnum.NO.getCode());
-        queryWrapper.likeLeft(RPanUserFile::getFilename,newFilenameWithoutSuffix);
+        LambdaQueryWrapper<RPanUserFile> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(RPanUserFile::getParentId, entity.getParentId());
+        queryWrapper.eq(RPanUserFile::getFolderFlag, entity.getFolderFlag());
+        queryWrapper.eq(RPanUserFile::getUserId, entity.getUserId());
+        queryWrapper.eq(RPanUserFile::getDelFlag, DelFlagEnum.NO.getCode());
+        queryWrapper.likeLeft(RPanUserFile::getFilename, newFilenameWithoutSuffix);
         String sql = queryWrapper.getTargetSql();
         return count(queryWrapper);
     }
 
     @Override
     public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
-        this.applicationContext=applicationContext;
+        this.applicationContext = applicationContext;
     }
 }
 

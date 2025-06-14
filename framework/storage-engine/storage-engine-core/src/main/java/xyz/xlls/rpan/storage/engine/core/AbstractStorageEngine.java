@@ -6,10 +6,7 @@ import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import xyz.xlls.rpan.cache.core.constants.CacheConstants;
 import xyz.xlls.rpan.core.exception.RPanFrameworkException;
-import xyz.xlls.rpan.storage.engine.core.context.DeleteFileContext;
-import xyz.xlls.rpan.storage.engine.core.context.MergeFileContext;
-import xyz.xlls.rpan.storage.engine.core.context.StoreFileChunkContext;
-import xyz.xlls.rpan.storage.engine.core.context.StoreFileContext;
+import xyz.xlls.rpan.storage.engine.core.context.*;
 
 import java.io.IOException;
 import java.util.Objects;
@@ -155,5 +152,35 @@ public abstract class AbstractStorageEngine implements StorageEngine{
         Assert.notBlank(context.getIdentifier(),"文件标识不能为空");
         Assert.notNull(context.getUserId(),"当前登录用户ID不能为空");
         Assert.notEmpty(context.getRealPathList(),"文件分片路径列表不能为空");
+    }
+
+    /**
+     * 读取文件内容到输出流中
+     * 1、参数校验
+     * 2、执行动作
+     * @param context
+     * @throws IOException
+     */
+    @Override
+    public void readFile(ReadFileContext context) throws IOException {
+        checkReadFileContext(context);
+        doReadFile(context);
+    }
+
+    /**
+     * 读取文件内容并写入到输出流中
+     * 下沉到子类去实现
+     * @param context
+     * @throws IOException
+     */
+    protected  abstract void doReadFile(ReadFileContext context) throws IOException;
+
+    /**
+     * 文件读取参数校验
+     * @param context
+     */
+    private void checkReadFileContext(ReadFileContext context) {
+        Assert.notBlank(context.getRealPath(),"文件真实存储路径不能为空");
+        Assert.notNull(context.getOutputStream(),"文件的输出流不能为空");
     }
 }
