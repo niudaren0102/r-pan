@@ -333,6 +333,98 @@ public class UserFileServiceImpl extends ServiceImpl<RPanUserFileMapper, RPanUse
     }
 
     /**
+     * 文件转移
+     * 1、参数校验
+     * 2、转移动作
+     * @param transferFileContext
+     */
+    @Override
+    public void transfer(TransferFileContext transferFileContext) {
+        checkTransferCondition(transferFileContext);
+        doTransfer(transferFileContext);
+    }
+
+    /**
+     * 执行文件转移的动作
+     * @param transferFileContext
+     */
+    private void doTransfer(TransferFileContext transferFileContext) {
+        List<RPanUserFile> prepareRecords = transferFileContext.getPrepareRecords();
+        prepareRecords.stream().forEach(record -> {
+            record.setParentId(transferFileContext.getTargetParentId());
+            record.setUserId(transferFileContext.getUserId());
+            record.setCreateUser(transferFileContext.getUserId());
+            record.setCreateTime(new Date());
+            record.setUpdateUser(transferFileContext.getUserId());
+            record.setUpdateTime(new Date());
+        });
+        if(!this.updateBatchById(prepareRecords)){
+            throw new RPanBusinessException("文件转移失败");
+        }
+    }
+
+    /**
+     * 文件转移的条件校验
+     * 1、目标文件必须是一个文件夹
+     * 2、选中的要转移的文件列表中不能含有目标文件夹以及子文件夹
+     * A-->B A能转移到B文件夹中
+     * @param transferFileContext
+     */
+    private void checkTransferCondition(TransferFileContext transferFileContext) {
+        Long targetParentId = transferFileContext.getTargetParentId();
+        RPanUserFile targetParent = this.getById(targetParentId);
+        if(!checkIsFolder(targetParent)){
+            throw new RPanBusinessException("目标文件不是一个文件夹");
+        }
+        List<Long> fileIdList = transferFileContext.getFileIdList();
+        List<RPanUserFile> prepareRecord = listByIds(fileIdList);
+        transferFileContext.setPrepareRecords(prepareRecord);
+        if(checkIsChildFolder(prepareRecord,targetParentId,transferFileContext.getUserId())){
+            throw new RPanBusinessException("目标文件夹ID不能是选中文件列表中的文件夹ID或其子文件夹ID");
+        }
+    }
+
+    /**
+     * 校验目标文件夹ID是要操作的文件记录的ID以及子文件夹ID
+     * 1、要操作的文件列表中没有文件夹，那就直接返回false
+     * 2、拼装文件夹ID一起所有子文件ID，判断存在即可
+     * @param prepareRecord
+     * @param targetParentId
+     * @param userId
+     * @return
+     */
+    private boolean checkIsChildFolder(List<RPanUserFile> prepareRecord, Long targetParentId, Long userId) {
+        prepareRecord = prepareRecord.stream().filter(record -> Objects.equals(record.getFolderFlag(), FolderFlagEnum.YES.getCode())).collect(Collectors.toList());
+        if(CollectionUtil.isEmpty(prepareRecord)){
+            return false;
+        }
+        List<RPanUserFile> folderRecords = queryFolderRecords(userId);
+        Map<Long, List<RPanUserFile>> folderRecordMap = folderRecords.stream().collect(Collectors.groupingBy(RPanUserFile::getParentId));
+        List<RPanUserFile> unavailableFolderRecordList = Lists.newArrayList();
+        prepareRecord.forEach(record->findAllChildFolderRecord(unavailableFolderRecordList,folderRecordMap,record));
+        List<Long> unavailableFolderRecordIds = unavailableFolderRecordList.stream().map(RPanUserFile::getFileId).collect(Collectors.toList());
+        return unavailableFolderRecordIds.contains(targetParentId);
+    }
+
+    /**
+     * 查找文件夹下所有子文件夹记录
+     * @param unavailableFolderRecordList
+     * @param folderRecordMap
+     * @param record
+     */
+    private void findAllChildFolderRecord(List<RPanUserFile> unavailableFolderRecordList, Map<Long, List<RPanUserFile>> folderRecordMap, RPanUserFile record) {
+        if(Objects.isNull(record)){
+            return;
+        }
+        List<RPanUserFile> childFolderRecordList = folderRecordMap.get(record.getFileId());
+        if(CollectionUtil.isEmpty(childFolderRecordList)){
+            return;
+        }
+        unavailableFolderRecordList.addAll(childFolderRecordList);
+        childFolderRecordList.stream().forEachOrdered(childRecord->findAllChildFolderRecord(unavailableFolderRecordList,folderRecordMap,childRecord));
+    }
+
+    /**
      * 拼装文件夹树列表
      * @param record
      * @return

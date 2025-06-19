@@ -100,4 +100,10 @@ public interface IUserFileService extends IService<RPanUserFile> {
      * @return
      */
     List<FolderTreeNodeVO> getFolderTree(QueryFolderTreeContext queryFolderTreeContext);
+
+    /**
+     * 文件转移
+     * @param transferFileContext
+     */
+    void transfer(TransferFileContext transferFileContext);
 }

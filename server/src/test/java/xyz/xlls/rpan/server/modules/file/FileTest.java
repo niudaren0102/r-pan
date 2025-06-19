@@ -3,6 +3,7 @@ package xyz.xlls.rpan.server.modules.file;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.lang.Assert;
 import lombok.AllArgsConstructor;
+import org.assertj.core.util.Lists;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -407,6 +408,65 @@ public class FileTest {
         List<FolderTreeNodeVO> folderTreeNodeVOList = userFileService.getFolderTree(queryFolderTreeContext);
         Assert.isTrue(folderTreeNodeVOList.size()==1);
         folderTreeNodeVOList.forEach(FolderTreeNodeVO::print);
+    }
+
+    /**
+     * 测试文件转移成功
+     */
+    @Test
+    public void testTransferFileSuccess() {
+        Long userId = register();
+        UserInfoVO info = info(userId);
+
+        CreateFolderContext context=new CreateFolderContext();
+        context.setParentId(info.getRootFileId());
+        context.setUserId(userId);
+        context.setFolderName("folder1");
+        Long folder1 = userFileService.createFolder(context);
+        Assert.notNull(folder1);
+
+        context.setFolderName("folder2");
+        Long folder2 = userFileService.createFolder(context);
+        Assert.notNull(folder2);
+
+        TransferFileContext transferFileContext=new TransferFileContext();
+        transferFileContext.setTargetParentId(folder1);
+        transferFileContext.setFileIdList(Lists.newArrayList(folder2));
+        transferFileContext.setUserId(userId);
+        userFileService.transfer(transferFileContext);
+        QueryFileContext queryFileContext=new QueryFileContext();
+        queryFileContext.setUserId(userId);
+        queryFileContext.setParentId(info.getRootFileId());
+        queryFileContext.setDelFlag(DelFlagEnum.NO.getCode());
+        List<RPanUserFileVo> fileList = userFileService.getFileList(queryFileContext);
+        Assert.notEmpty(fileList);
+    }
+
+    /**
+     * 测试文件转移失败，目标文件夹是要转移的文件列表中的文件夹或者是其子文件夹
+     */
+    @Test(expected = RPanBusinessException.class)
+    public void testTransferFileFail() {
+        Long userId = register();
+        UserInfoVO info = info(userId);
+
+        CreateFolderContext context=new CreateFolderContext();
+        context.setParentId(info.getRootFileId());
+        context.setUserId(userId);
+        context.setFolderName("folder1");
+        Long folder1 = userFileService.createFolder(context);
+        Assert.notNull(folder1);
+
+        context.setFolderName("folder2");
+        context.setParentId(folder1);
+        Long folder2 = userFileService.createFolder(context);
+        Assert.notNull(folder2);
+
+        TransferFileContext transferFileContext=new TransferFileContext();
+        transferFileContext.setTargetParentId(folder2);
+        transferFileContext.setFileIdList(Lists.newArrayList(folder1));
+        transferFileContext.setUserId(userId);
+        userFileService.transfer(transferFileContext);
     }
     /**
      * 文件分片上传器
