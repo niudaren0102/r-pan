@@ -4,8 +4,8 @@ import cn.hutool.core.collection.CollectionUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.google.common.collect.Lists;
 import org.apache.commons.lang3.StringUtils;
-import org.assertj.core.util.Lists;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
@@ -367,6 +367,31 @@ public class UserFileServiceImpl extends ServiceImpl<RPanUserFileMapper, RPanUse
         List<FileSearchResultVO> result=doSearch(context);
         fillParentFileName(result);
         afterSearch(context);
+        return result;
+    }
+
+    /**
+     * 获取面包屑列表
+     * 1、获取所有文件夹信息
+     * 2、拼接需要用到的面包屑列表
+     * @param context
+     * @return
+     */
+    @Override
+    public List<BreadcrumbVO> getBreadcrumbs(QueryBreadcrumbsContext context) {
+        List<RPanUserFile> folderRecords = queryFolderRecords(context.getUserId());
+        Map<Long, BreadcrumbVO> prepareBreadcrumbs = folderRecords.stream().map(BreadcrumbVO::transfer).collect(Collectors.toMap(BreadcrumbVO::getId, a -> a));
+        BreadcrumbVO currentNode;
+        Long fileId= context.getFileId();
+        List<BreadcrumbVO> result= Lists.newLinkedList();
+        do{
+            currentNode=prepareBreadcrumbs.get(fileId);
+            if(Objects.nonNull(currentNode)){
+                result.add(0,currentNode);
+                fileId=currentNode.getParentId();
+            }
+
+        }while (Objects.nonNull(currentNode));
         return result;
     }
 

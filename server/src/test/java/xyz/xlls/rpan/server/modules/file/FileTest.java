@@ -25,13 +25,10 @@ import xyz.xlls.rpan.server.modules.file.service.IFileChunkService;
 import xyz.xlls.rpan.server.modules.file.service.IFileService;
 import xyz.xlls.rpan.server.modules.file.service.IUserFileService;
 import xyz.xlls.rpan.server.modules.file.service.impl.FileServiceImpl;
-import xyz.xlls.rpan.server.modules.file.vo.FileChunkUploadVO;
-import xyz.xlls.rpan.server.modules.file.vo.FileSearchResultVO;
-import xyz.xlls.rpan.server.modules.file.vo.FolderTreeNodeVO;
+import xyz.xlls.rpan.server.modules.file.vo.*;
 import xyz.xlls.rpan.server.modules.user.context.UserLoginContext;
 import xyz.xlls.rpan.server.modules.user.context.UserRegisterContext;
 import xyz.xlls.rpan.server.modules.user.service.IUserService;
-import xyz.xlls.rpan.server.modules.file.vo.RPanUserFileVO;
 import xyz.xlls.rpan.server.modules.user.vo.UserInfoVO;
 
 import java.util.ArrayList;
@@ -556,6 +553,31 @@ public class FileTest {
         fileSearchContext.setKeyword("1");
         List<FileSearchResultVO> search1 = userFileService.search(fileSearchContext);
         Assert.isTrue(CollectionUtils.isEmpty(search1));
+    }
+
+    /**
+     * 测试查询文件面包屑导航列表成功
+     */
+    @Test
+    public void testGetBreadcrumbsSuccess(){
+        Long userId = register();
+        UserInfoVO info = info(userId);
+
+        CreateFolderContext context=new CreateFolderContext();
+        context.setParentId(info.getRootFileId());
+        context.setUserId(userId);
+        context.setFolderName("folder1");
+        Long folder1 = userFileService.createFolder(context);
+        Assert.notNull(folder1);
+
+        QueryBreadcrumbsContext queryBreadcrumbsContext=new QueryBreadcrumbsContext();
+        queryBreadcrumbsContext.setUserId(userId);
+        queryBreadcrumbsContext.setFileId(folder1);
+
+        List<BreadcrumbVO> breadcrumbs = userFileService.getBreadcrumbs(queryBreadcrumbsContext);
+
+        Assert.notEmpty(breadcrumbs);
+        Assert.isTrue(breadcrumbs.size()==2);
     }
     /**
      * 文件分片上传器
