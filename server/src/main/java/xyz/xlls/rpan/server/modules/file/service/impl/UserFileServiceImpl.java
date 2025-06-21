@@ -357,6 +357,7 @@ public class UserFileServiceImpl extends ServiceImpl<RPanUserFileMapper, RPanUse
             record.setCreateTime(new Date());
             record.setUpdateUser(transferFileContext.getUserId());
             record.setUpdateTime(new Date());
+            handleDuplicateFilename(record);
         });
         if(!this.updateBatchById(prepareRecords)){
             throw new RPanBusinessException("文件转移失败");
@@ -401,6 +402,7 @@ public class UserFileServiceImpl extends ServiceImpl<RPanUserFileMapper, RPanUse
         List<RPanUserFile> folderRecords = queryFolderRecords(userId);
         Map<Long, List<RPanUserFile>> folderRecordMap = folderRecords.stream().collect(Collectors.groupingBy(RPanUserFile::getParentId));
         List<RPanUserFile> unavailableFolderRecordList = Lists.newArrayList();
+        unavailableFolderRecordList.addAll(prepareRecord);
         prepareRecord.forEach(record->findAllChildFolderRecord(unavailableFolderRecordList,folderRecordMap,record));
         List<Long> unavailableFolderRecordIds = unavailableFolderRecordList.stream().map(RPanUserFile::getFileId).collect(Collectors.toList());
         return unavailableFolderRecordIds.contains(targetParentId);
