@@ -468,6 +468,66 @@ public class FileTest {
         transferFileContext.setUserId(userId);
         userFileService.transfer(transferFileContext);
     }
+
+
+    /**
+     * 测试文件复制成功
+     */
+    @Test
+    public void testCopyFileSuccess() {
+        Long userId = register();
+        UserInfoVO info = info(userId);
+
+        CreateFolderContext context=new CreateFolderContext();
+        context.setParentId(info.getRootFileId());
+        context.setUserId(userId);
+        context.setFolderName("folder1");
+        Long folder1 = userFileService.createFolder(context);
+        Assert.notNull(folder1);
+
+        context.setFolderName("folder2");
+        Long folder2 = userFileService.createFolder(context);
+        Assert.notNull(folder2);
+
+        CopyFileContext copyFileContext=new CopyFileContext();
+        copyFileContext.setTargetParentId(folder1);
+        copyFileContext.setFileIdList(Lists.newArrayList(folder2));
+        copyFileContext.setUserId(userId);
+        userFileService.copy(copyFileContext);
+        QueryFileContext queryFileContext=new QueryFileContext();
+        queryFileContext.setUserId(userId);
+        queryFileContext.setParentId(folder1);
+        queryFileContext.setDelFlag(DelFlagEnum.NO.getCode());
+        List<RPanUserFileVo> fileList = userFileService.getFileList(queryFileContext);
+        Assert.notEmpty(fileList);
+    }
+
+    /**
+     * 测试文件复制失败，目标文件夹是要转移的文件列表中的文件夹或者是其子文件夹
+     */
+    @Test(expected = RPanBusinessException.class)
+    public void testCopyFileFail() {
+        Long userId = register();
+        UserInfoVO info = info(userId);
+
+        CreateFolderContext context=new CreateFolderContext();
+        context.setParentId(info.getRootFileId());
+        context.setUserId(userId);
+        context.setFolderName("folder1");
+        Long folder1 = userFileService.createFolder(context);
+        Assert.notNull(folder1);
+
+        context.setFolderName("folder2");
+        context.setParentId(folder1);
+        Long folder2 = userFileService.createFolder(context);
+        Assert.notNull(folder2);
+
+        CopyFileContext copyFileContext=new CopyFileContext();
+        copyFileContext.setTargetParentId(folder2);
+        copyFileContext.setFileIdList(Lists.newArrayList(folder1));
+        copyFileContext.setUserId(userId);
+        userFileService.copy(copyFileContext);
+    }
     /**
      * 文件分片上传器
      */
