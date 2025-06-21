@@ -27,7 +27,7 @@
         create_user,create_time,update_user,
         update_time
     </sql>
-    <select id="selectFileList" resultType="xyz.xlls.rpan.server.modules.file.vo.RPanUserFileVo">
+    <select id="selectFileList" resultType="xyz.xlls.rpan.server.modules.file.vo.RPanUserFileVO">
         select
         file_id AS fileId,
         parent_id AS parentId,
@@ -43,6 +43,28 @@
         <if test="param.parentId != null and param.parentId!=-1">
             and parent_id=#{param.parentId}
         </if>
+        <if test="param.fileTypeArray != null and param.fileTypeArray.size() > 0">
+            and file_type in
+            <foreach item="item" collection="param.fileTypeArray" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+        and del_flag=#{param.delFlag}
+    </select>
+    <select id="searchFile" resultType="xyz.xlls.rpan.server.modules.file.vo.FileSearchResultVO">
+        select
+        file_id AS fileId,
+        parent_id AS parentId,
+        filename AS filename,
+        file_size_desc AS fileSizeDesc,
+        file_type AS fileType,
+        folder_flag AS folderFlag,
+        update_time AS updateTime
+        from
+        r_pan_user_file
+        where
+        user_id=#{param.userId}
+        AND filename LIKE CONCAT(#{param.keyword},'%')
         <if test="param.fileTypeArray != null and param.fileTypeArray.size() > 0">
             and file_type in
             <foreach item="item" collection="param.fileTypeArray" open="(" separator="," close=")">

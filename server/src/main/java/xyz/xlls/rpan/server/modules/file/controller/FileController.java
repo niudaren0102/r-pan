@@ -2,6 +2,7 @@ package xyz.xlls.rpan.server.modules.file.controller;
 
 import com.google.common.base.Splitter;
 import io.swagger.annotations.ApiOperation;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.validation.annotation.Validated;
@@ -16,10 +17,7 @@ import xyz.xlls.rpan.server.modules.file.converter.FileConverter;
 import xyz.xlls.rpan.server.modules.file.enums.DelFlagEnum;
 import xyz.xlls.rpan.server.modules.file.po.*;
 import xyz.xlls.rpan.server.modules.file.service.IUserFileService;
-import xyz.xlls.rpan.server.modules.file.vo.FileChunkUploadVO;
-import xyz.xlls.rpan.server.modules.file.vo.FolderTreeNodeVO;
-import xyz.xlls.rpan.server.modules.file.vo.RPanUserFileVo;
-import xyz.xlls.rpan.server.modules.file.vo.UploadedChunksVO;
+import xyz.xlls.rpan.server.modules.file.vo.*;
 
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.constraints.NotBlank;
@@ -44,7 +42,7 @@ public class FileController {
             produces = MediaType.APPLICATION_JSON_VALUE
     )
     @GetMapping("files")
-    public R<List<RPanUserFileVo>> files(
+    public R<List<RPanUserFileVO>> files(
             @NotBlank(message = "父文件夹ID不能为空") @RequestParam(value = "parentId",required = false) String parentId,
             @RequestParam(value = "fileTypes",required = false,defaultValue = FileConstants.ALL_FILE_TYPE) String fileTypes
     ){
@@ -59,7 +57,7 @@ public class FileController {
         context.setFileTypeArray(fileTypeList);
         context.setUserId(UserIdUtil.get());
         context.setDelFlag(DelFlagEnum.NO.getCode());
-        List<RPanUserFileVo> result=userFileService.getFileList(context);
+        List<RPanUserFileVO> result=userFileService.getFileList(context);
         return R.data(result);
     }
     @ApiOperation(
@@ -249,6 +247,25 @@ public class FileController {
         context.setUserId(UserIdUtil.get());
         userFileService.copy(context);
         return R.success();
+    }
+    @ApiOperation(
+            value = "文件搜索",
+            notes = "该接口提供了文件搜索的功能",
+            consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE,
+            produces = MediaType.APPLICATION_JSON_UTF8_VALUE
+    )
+    @PostMapping("file/search")
+    public R<List<FileSearchResultVO>> search(@Validated  FileSearchPO fileSearchPO){
+        FileSearchContext context=new FileSearchContext();
+        context.setKeyword(fileSearchPO.getKeyword());
+        context.setUserId(UserIdUtil.get());
+        String fileTypes = fileSearchPO.getFileTypes();
+        if(StringUtils.isNoneBlank(fileTypes)&&!Objects.equals(FileConstants.ALL_FILE_TYPE, fileTypes)){
+            List<Integer> fileTypeArray = Splitter.on(RPanConstants.COMMON_SEPARATOR).splitToList(fileTypes).stream().map(Integer::valueOf).collect(Collectors.toList());
+            context.setFileTypeArray(fileTypeArray);
+        }
+        List<FileSearchResultVO> result= userFileService.search(context);
+        return R.data(result);
     }
 
 }

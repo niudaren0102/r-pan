@@ -9,5 +9,10 @@ import com.baomidou.mybatisplus.extension.service.IService;
 * @createDate 2024-10-22 14:59:10
 */
 public interface IUserSearchHistoryService extends IService<RPanUserSearchHistory> {
-
+    /**
+     * 更新搜索记录时间
+     * @param updateSearchHistoryTime
+     * @param searchContent
+     */
+    void updateSearchHistoryTime(Long userId, String searchContent);
 }

@@ -24,12 +24,14 @@ import xyz.xlls.rpan.server.modules.file.enums.MergeFlagEnum;
 import xyz.xlls.rpan.server.modules.file.service.IFileChunkService;
 import xyz.xlls.rpan.server.modules.file.service.IFileService;
 import xyz.xlls.rpan.server.modules.file.service.IUserFileService;
+import xyz.xlls.rpan.server.modules.file.service.impl.FileServiceImpl;
 import xyz.xlls.rpan.server.modules.file.vo.FileChunkUploadVO;
+import xyz.xlls.rpan.server.modules.file.vo.FileSearchResultVO;
 import xyz.xlls.rpan.server.modules.file.vo.FolderTreeNodeVO;
 import xyz.xlls.rpan.server.modules.user.context.UserLoginContext;
 import xyz.xlls.rpan.server.modules.user.context.UserRegisterContext;
 import xyz.xlls.rpan.server.modules.user.service.IUserService;
-import xyz.xlls.rpan.server.modules.file.vo.RPanUserFileVo;
+import xyz.xlls.rpan.server.modules.file.vo.RPanUserFileVO;
 import xyz.xlls.rpan.server.modules.user.vo.UserInfoVO;
 
 import java.util.ArrayList;
@@ -53,6 +55,8 @@ public class FileTest {
     private IFileService fileService;
     @Autowired
     private IFileChunkService fileChunkService;
+    @Autowired
+    private FileServiceImpl fileServiceImpl;
 
     /**
      * 测试用户查询文件列表成功
@@ -66,7 +70,7 @@ public class FileTest {
         context.setParentId(info.getRootFileId());
         context.setFileTypeArray(null);
         context.setDelFlag(DelFlagEnum.NO.getCode());
-        List<RPanUserFileVo> result = userFileService.getFileList(context);
+        List<RPanUserFileVO> result = userFileService.getFileList(context);
         Assert.isTrue(CollectionUtils.isEmpty(result));
     }
 
@@ -331,7 +335,7 @@ public class FileTest {
         queryFileContext.setDelFlag(DelFlagEnum.NO.getCode());
         queryFileContext.setUserId(userId);
         queryFileContext.setParentId(info.getRootFileId());
-        List<RPanUserFileVo> fileList = userFileService.getFileList(queryFileContext);
+        List<RPanUserFileVO> fileList = userFileService.getFileList(queryFileContext);
         Assert.notEmpty(fileList);
         Assert.isTrue(fileList.size()==1);
 
@@ -438,7 +442,7 @@ public class FileTest {
         queryFileContext.setUserId(userId);
         queryFileContext.setParentId(info.getRootFileId());
         queryFileContext.setDelFlag(DelFlagEnum.NO.getCode());
-        List<RPanUserFileVo> fileList = userFileService.getFileList(queryFileContext);
+        List<RPanUserFileVO> fileList = userFileService.getFileList(queryFileContext);
         Assert.notEmpty(fileList);
     }
 
@@ -498,7 +502,7 @@ public class FileTest {
         queryFileContext.setUserId(userId);
         queryFileContext.setParentId(folder1);
         queryFileContext.setDelFlag(DelFlagEnum.NO.getCode());
-        List<RPanUserFileVo> fileList = userFileService.getFileList(queryFileContext);
+        List<RPanUserFileVO> fileList = userFileService.getFileList(queryFileContext);
         Assert.notEmpty(fileList);
     }
 
@@ -527,6 +531,31 @@ public class FileTest {
         copyFileContext.setFileIdList(Lists.newArrayList(folder1));
         copyFileContext.setUserId(userId);
         userFileService.copy(copyFileContext);
+    }
+
+    /**
+     * 测试搜索文件成功
+     */
+    @Test
+    public void testSearchSuccess(){
+        Long userId = register();
+        UserInfoVO info = info(userId);
+
+        CreateFolderContext context=new CreateFolderContext();
+        context.setParentId(info.getRootFileId());
+        context.setUserId(userId);
+        context.setFolderName("folder1");
+        Long folder1 = userFileService.createFolder(context);
+        Assert.notNull(folder1);
+        FileSearchContext fileSearchContext=new FileSearchContext();
+        fileSearchContext.setUserId(userId);
+        fileSearchContext.setKeyword("fol");
+        fileSearchContext.setDelFlag(DelFlagEnum.NO.getCode());
+        List<FileSearchResultVO> search = userFileService.search(fileSearchContext);
+        Assert.notEmpty(search);
+        fileSearchContext.setKeyword("1");
+        List<FileSearchResultVO> search1 = userFileService.search(fileSearchContext);
+        Assert.isTrue(CollectionUtils.isEmpty(search1));
     }
     /**
      * 文件分片上传器

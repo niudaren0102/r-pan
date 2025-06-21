@@ -17,6 +17,7 @@ import xyz.xlls.rpan.core.exception.RPanBusinessException;
 import xyz.xlls.rpan.core.utils.FileUtil;
 import xyz.xlls.rpan.core.utils.IdUtil;
 import xyz.xlls.rpan.server.common.event.file.DeleteFileEvent;
+import xyz.xlls.rpan.server.common.event.search.UserSearchEvent;
 import xyz.xlls.rpan.server.common.utils.HttpUtil;
 import xyz.xlls.rpan.server.modules.file.constants.FileConstants;
 import xyz.xlls.rpan.server.modules.file.context.*;
@@ -31,10 +32,7 @@ import xyz.xlls.rpan.server.modules.file.service.IFileService;
 import xyz.xlls.rpan.server.modules.file.service.IUserFileService;
 import xyz.xlls.rpan.server.modules.file.mapper.RPanUserFileMapper;
 import org.springframework.stereotype.Service;
-import xyz.xlls.rpan.server.modules.file.vo.FileChunkUploadVO;
-import xyz.xlls.rpan.server.modules.file.vo.FolderTreeNodeVO;
-import xyz.xlls.rpan.server.modules.file.vo.RPanUserFileVo;
-import xyz.xlls.rpan.server.modules.file.vo.UploadedChunksVO;
+import xyz.xlls.rpan.server.modules.file.vo.*;
 import xyz.xlls.rpan.storage.engine.core.StorageEngine;
 import xyz.xlls.rpan.storage.engine.core.context.ReadFileContext;
 
@@ -102,7 +100,7 @@ public class UserFileServiceImpl extends ServiceImpl<RPanUserFileMapper, RPanUse
      * @return
      */
     @Override
-    public List<RPanUserFileVo> getFileList(QueryFileContext context) {
+    public List<RPanUserFileVO> getFileList(QueryFileContext context) {
         return baseMapper.selectFileList(context);
     }
 
@@ -354,6 +352,56 @@ public class UserFileServiceImpl extends ServiceImpl<RPanUserFileMapper, RPanUse
     public void copy(CopyFileContext context) {
         checkCopyCondition(context);
         doCopy(context);
+    }
+
+    /**
+     * 文件列表搜索
+     * 1、执行文件搜索
+     * 2、拼装文件的父文件夹名称
+     * 3、执行文件搜素的后置动作
+     * @param context
+     * @return
+     */
+    @Override
+    public List<FileSearchResultVO> search(FileSearchContext context) {
+        List<FileSearchResultVO> result=doSearch(context);
+        fillParentFileName(result);
+        afterSearch(context);
+        return result;
+    }
+
+    /**
+     * 搜索的后置操作
+     * 1、发布文件搜索的时间
+     *
+     * @param context
+     */
+    private void afterSearch(FileSearchContext context) {
+        UserSearchEvent userSearchEvent=new UserSearchEvent(this, context.getKeyword(), context.getUserId());
+        applicationContext.publishEvent(userSearchEvent);
+    }
+
+    /**
+     * 填充文件列表的父文件夹名称
+     * @param result
+     */
+    private void fillParentFileName(List<FileSearchResultVO> result) {
+        if(CollectionUtil.isEmpty(result)){
+            return;
+        }
+        List<Long> parentIdList = result.stream().map(FileSearchResultVO::getParentId).collect(Collectors.toList());
+        List<RPanUserFile> parentRecords = listByIds(parentIdList);
+        Map<Long, String> fileId2filenameMap = parentRecords.stream().collect(Collectors.toMap(RPanUserFile::getFileId, RPanUserFile::getFilename));
+        result.stream().forEach(vo->vo.setParentFileName(fileId2filenameMap.get(vo.getParentId())));
+    }
+
+    /**
+     * 搜索文件列表
+     * @param context
+     * @return
+     */
+    private List<FileSearchResultVO> doSearch(FileSearchContext context) {
+        return this.baseMapper.searchFile(context);
     }
 
     /**

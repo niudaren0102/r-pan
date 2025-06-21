@@ -15,6 +15,8 @@ import lombok.Data;
 @TableName(value ="r_pan_user_search_history")
 @Data
 public class RPanUserSearchHistory implements Serializable {
+    @TableField(exist = false)
+    private static final long serialVersionUID = 4823958418351309305L;
     /**
      * 主键
      */
@@ -25,26 +27,23 @@ public class RPanUserSearchHistory implements Serializable {
      * 用户id
      */
     @TableField(value = "user_id")
-    private Long user_id;
+    private Long userId;
 
     /**
      * 搜索文案
      */
     @TableField(value = "search_content")
-    private String search_content;
+    private String searchContent;
 
     /**
      * 创建时间
      */
     @TableField(value = "create_time")
-    private Date create_time;
+    private Date createTime;
 
     /**
      * 更新时间
      */
     @TableField(value = "update_time")
-    private Date update_time;
-
-    @TableField(exist = false)
-    private static final long serialVersionUID = 1L;
+    private Date updateTime;
 }

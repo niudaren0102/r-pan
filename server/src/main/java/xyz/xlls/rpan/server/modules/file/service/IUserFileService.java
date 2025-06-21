@@ -3,10 +3,7 @@ package xyz.xlls.rpan.server.modules.file.service;
 import xyz.xlls.rpan.server.modules.file.context.*;
 import xyz.xlls.rpan.server.modules.file.entity.RPanUserFile;
 import com.baomidou.mybatisplus.extension.service.IService;
-import xyz.xlls.rpan.server.modules.file.vo.FileChunkUploadVO;
-import xyz.xlls.rpan.server.modules.file.vo.FolderTreeNodeVO;
-import xyz.xlls.rpan.server.modules.file.vo.RPanUserFileVo;
-import xyz.xlls.rpan.server.modules.file.vo.UploadedChunksVO;
+import xyz.xlls.rpan.server.modules.file.vo.*;
 
 import java.util.List;
 
@@ -35,7 +32,7 @@ public interface IUserFileService extends IService<RPanUserFile> {
      * @param context
      * @return
      */
-    List<RPanUserFileVo> getFileList(QueryFileContext context);
+    List<RPanUserFileVO> getFileList(QueryFileContext context);
 
     /**
      * 更新文件名称
@@ -112,4 +109,11 @@ public interface IUserFileService extends IService<RPanUserFile> {
      * @param context
      */
     void copy(CopyFileContext context);
+
+    /**
+     * 文件列表搜索
+     * @param context
+     * @return
+     */
+    List<FileSearchResultVO> search(FileSearchContext context);
 }

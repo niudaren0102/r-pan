@@ -1,10 +1,13 @@
 package xyz.xlls.rpan.server.modules.user.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import xyz.xlls.rpan.server.modules.user.entity.RPanUserSearchHistory;
 import xyz.xlls.rpan.server.modules.user.service.IUserSearchHistoryService;
 import xyz.xlls.rpan.server.modules.user.mapper.RPanUserSearchHistoryMapper;
 import org.springframework.stereotype.Service;
+
+import java.util.Date;
 
 /**
 * @author Administrator
@@ -15,6 +18,14 @@ import org.springframework.stereotype.Service;
 public class UserSearchHistoryServiceImpl extends ServiceImpl<RPanUserSearchHistoryMapper, RPanUserSearchHistory>
     implements IUserSearchHistoryService {
 
+    @Override
+    public void updateSearchHistoryTime(Long userId, String searchContent) {
+        LambdaUpdateWrapper<RPanUserSearchHistory> updateWrapper=new LambdaUpdateWrapper<>();
+        updateWrapper.eq(RPanUserSearchHistory::getUserId,userId);
+        updateWrapper.eq(RPanUserSearchHistory::getSearchContent,searchContent);
+        updateWrapper.set(RPanUserSearchHistory::getUpdateTime,new Date());
+        this.update(updateWrapper);
+    }
 }
 
 
