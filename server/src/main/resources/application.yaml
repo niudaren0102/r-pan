@@ -107,5 +107,5 @@ xyz:
           fdfs:
             connect-timeout: 30000
             tracker-list:
-              - fastdfs.kk.com:2212
+              - fastdfs.kk.com:22122
             group: group1

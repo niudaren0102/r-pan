@@ -3,7 +3,6 @@ package xyz.xlls.rpan.storage.engine.fastdfs;
 import cn.hutool.core.collection.CollectionUtil;
 import com.github.tobato.fastdfs.domain.StorePath;
 import com.github.tobato.fastdfs.proto.storage.DownloadByteArray;
-import com.github.tobato.fastdfs.service.DefaultTrackerClient;
 import com.github.tobato.fastdfs.service.FastFileStorageClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -13,7 +12,6 @@ import xyz.xlls.rpan.core.utils.FileUtil;
 import xyz.xlls.rpan.storage.engine.core.AbstractStorageEngine;
 import xyz.xlls.rpan.storage.engine.core.context.*;
 import xyz.xlls.rpan.storage.engine.fastdfs.config.FastDFSStorageEngineConfig;
-import xyz.xlls.rpan.storage.engine.fastdfs.config.UserDefaultTrackerClient;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -28,8 +26,6 @@ public class FastDFSStorageEngine extends AbstractStorageEngine {
     private FastFileStorageClient client;
     @Autowired
     private FastDFSStorageEngineConfig config;
-    @Autowired
-    private UserDefaultTrackerClient defaultTrackerClient;
 
 
     @Override
