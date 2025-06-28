@@ -109,7 +109,7 @@ public class FileController {
             consumes = MediaType.APPLICATION_JSON_VALUE,
             produces = MediaType.APPLICATION_JSON_VALUE
     )
-    @DeleteMapping("file/sec-upload")
+    @PostMapping("file/sec-upload")
     public R secUpload(@RequestBody @Validated SecUploadPO secUploadPO) {
         SecUploadContext context = fileConverter.secUploadPO2SecUploadContext(secUploadPO);
         boolean success=userFileService.secUpload(context);
@@ -122,11 +122,11 @@ public class FileController {
     @ApiOperation(
             value = "单文件上传",
             notes = "该接口提供了单文件上传的功能",
-            consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE,
-            produces = MediaType.APPLICATION_JSON_VALUE
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            produces = MediaType.APPLICATION_JSON_UTF8_VALUE
     )
-    @DeleteMapping("file/upload")
-    public R upload(@RequestBody @Validated FileUploadPO fileUploadPO) {
+    @PostMapping("file/upload")
+    public R upload(@Validated FileUploadPO fileUploadPO) {
         FileUploadContext context = fileConverter.fileUploadPO2FileUploadContext(fileUploadPO);
         userFileService.upload(context);
         return R.success();
@@ -134,11 +134,11 @@ public class FileController {
     @ApiOperation(
             value = "文件分片上传",
             notes = "该接口提供了文件分片上传的功能",
-            consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE,
-            produces = MediaType.APPLICATION_JSON_VALUE
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            produces = MediaType.APPLICATION_JSON_UTF8_VALUE
     )
     @PostMapping("file/chunk-upload")
-    public R<FileChunkUploadVO> chunkUpload(@RequestBody @Validated FileChunkUploadPO fileChunkUploadPO) {
+    public R<FileChunkUploadVO> chunkUpload(@Validated FileChunkUploadPO fileChunkUploadPO) {
         FileChunkUploadContext context = fileConverter.chunkUploadPO2ChunkUploadContext(fileChunkUploadPO);
         FileChunkUploadVO vo=userFileService.chunkUpload(context);
         return R.data(vo);

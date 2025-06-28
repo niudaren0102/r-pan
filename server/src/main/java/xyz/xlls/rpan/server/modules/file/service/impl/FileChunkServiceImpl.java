@@ -11,17 +11,15 @@ import xyz.xlls.rpan.server.modules.file.context.FileChunkSaveContext;
 import xyz.xlls.rpan.server.modules.file.context.QueryUploadedChunksContext;
 import xyz.xlls.rpan.server.modules.file.context.QueryUploadedChunksRecordContext;
 import xyz.xlls.rpan.server.modules.file.converter.FileConverter;
-import xyz.xlls.rpan.server.modules.file.entity.RPanFile;
 import xyz.xlls.rpan.server.modules.file.entity.RPanFileChunk;
 import xyz.xlls.rpan.server.modules.file.enums.MergeFlagEnum;
 import xyz.xlls.rpan.server.modules.file.service.IFileChunkService;
 import xyz.xlls.rpan.server.modules.file.mapper.RPanFileChunkMapper;
 import org.springframework.stereotype.Service;
+import xyz.xlls.rpan.storage.engine.core.StorageEngine;
 import xyz.xlls.rpan.storage.engine.core.context.StoreFileChunkContext;
-import xyz.xlls.rpan.storage.engine.local.LocalStorageEngine;
 
 import java.io.IOException;
-import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
@@ -36,7 +34,7 @@ public class FileChunkServiceImpl extends ServiceImpl<RPanFileChunkMapper, RPanF
     @Autowired
     private PanServerConfig panServerConfig;
     @Autowired
-    private LocalStorageEngine localStorageEngine;
+    private StorageEngine storageEngine;
     @Autowired
     private FileConverter fileConverter;
 
@@ -128,7 +126,7 @@ public class FileChunkServiceImpl extends ServiceImpl<RPanFileChunkMapper, RPanF
         try {
             StoreFileChunkContext context=fileConverter.fileChunkSaveContext2StoreFileChunkContext(fileChunkSaveContext);
             context.setInputStream(fileChunkSaveContext.getFile().getInputStream());
-            localStorageEngine.storeChunk(context);
+            storageEngine.storeChunk(context);
             fileChunkSaveContext.setRealPath(context.getRealPath());
         }catch (IOException e){
             e.printStackTrace();

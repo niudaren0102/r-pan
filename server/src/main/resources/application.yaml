@@ -81,7 +81,7 @@ mybatis-plus:
 ##              - 39.98.37.93:22122
 ##            group: group1
 server:
-  port: 8080
+  port: 8082
 management:
   endpoints:
     web:
@@ -99,3 +99,13 @@ swagger2:
   contact-url: https://blog.xlls.xyz
   contact-email: zhangdehenshuaiyy.outlook.com
   version: 1.0
+xyz:
+  xlls:
+    rpan:
+      storage:
+        engine:
+          fdfs:
+            connect-timeout: 30000
+            tracker-list:
+              - fastdfs.kk.com:2212
+            group: group1
