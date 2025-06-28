@@ -25,7 +25,7 @@ public class RPanUserFileVO implements Serializable {
     @JsonSerialize(using= IdEncryptSerializer.class)
     private Long parentId;
     @ApiModelProperty(value = "文件名称")
-    private String fileName;
+    private String filename;
     @ApiModelProperty(value = "文件大小描述")
     private String fileSizeDesc;
     @ApiModelProperty(value = "文件类标识 0否 1是")

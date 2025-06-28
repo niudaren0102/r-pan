@@ -1,6 +1,8 @@
 package xyz.xlls.rpan.server.modules.file.controller;
 
 import com.google.common.base.Splitter;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiOperation;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,6 +32,7 @@ import java.util.stream.Collectors;
  */
 @RestController
 @Validated
+@Api(tags = "文件模块")
 public class FileController {
     @Autowired
     private IUserFileService userFileService;
