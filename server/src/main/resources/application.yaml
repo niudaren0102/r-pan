@@ -81,7 +81,7 @@ mybatis-plus:
 ##              - 39.98.37.93:22122
 ##            group: group1
 server:
-  port: 8082
+  port: 8080
 management:
   endpoints:
     web:
