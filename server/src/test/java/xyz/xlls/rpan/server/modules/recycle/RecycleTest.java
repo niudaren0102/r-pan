@@ -1,18 +1,21 @@
 package xyz.xlls.rpan.server.modules.recycle;
 
 import cn.hutool.core.lang.Assert;
+import com.google.common.collect.Lists;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.transaction.annotation.Transactional;
+import xyz.xlls.rpan.core.exception.RPanBusinessException;
 import xyz.xlls.rpan.server.RPanServerLauncher;
 import xyz.xlls.rpan.server.modules.file.context.CreateFolderContext;
 import xyz.xlls.rpan.server.modules.file.context.DeleteFileContext;
 import xyz.xlls.rpan.server.modules.file.service.IUserFileService;
 import xyz.xlls.rpan.server.modules.file.vo.RPanUserFileVO;
 import xyz.xlls.rpan.server.modules.recycle.context.QueryRecycleFileListContext;
+import xyz.xlls.rpan.server.modules.recycle.context.RestoreContext;
 import xyz.xlls.rpan.server.modules.recycle.service.IRecycleService;
 import xyz.xlls.rpan.server.modules.user.context.UserLoginContext;
 import xyz.xlls.rpan.server.modules.user.context.UserRegisterContext;
@@ -63,6 +66,139 @@ public class RecycleTest {
         Assert.notEmpty(recycles);
         Assert.isTrue(recycles.size()==1);
     }
+
+    /**
+     * 测试文件还原成功
+     */
+    @Test
+    public void testFileRestoreSuccess(){
+        Long userId = register();
+        UserInfoVO info = info(userId);
+        //创建一个文件夹
+        CreateFolderContext context=new CreateFolderContext();
+        context.setParentId(info.getRootFileId());
+        context.setUserId(userId);
+        context.setFolderName("test");
+        Long fileId = userFileService.createFolder(context);
+        Assert.notNull(fileId);
+        //删除该文件夹
+        DeleteFileContext deleteFileContext=new DeleteFileContext();
+        List<Long> fileIdList=new ArrayList<>();
+        fileIdList.add(fileId);
+        deleteFileContext.setFileIdList(fileIdList);
+        deleteFileContext.setUserId(userId);
+        userFileService.deleteFile(deleteFileContext);
+        //文件还原
+        RestoreContext restoreContext=new RestoreContext();
+        restoreContext.setUserId(userId);
+        restoreContext.setFileIdList(Lists.newArrayList(fileId));
+        recycleService.restore(restoreContext);
+    }
+
+    /**
+     * 测试文件还原失败，没有操作权限
+     */
+    @Test(expected = RPanBusinessException.class)
+    public void testFileRestoreFileByWrongUserId(){
+        Long userId = register();
+        UserInfoVO info = info(userId);
+        //创建一个文件夹
+        CreateFolderContext context=new CreateFolderContext();
+        context.setParentId(info.getRootFileId());
+        context.setUserId(userId);
+        context.setFolderName("test");
+        Long fileId = userFileService.createFolder(context);
+        Assert.notNull(fileId);
+        //删除该文件夹
+        DeleteFileContext deleteFileContext=new DeleteFileContext();
+        List<Long> fileIdList=new ArrayList<>();
+        fileIdList.add(fileId);
+        deleteFileContext.setFileIdList(fileIdList);
+        deleteFileContext.setUserId(userId);
+        userFileService.deleteFile(deleteFileContext);
+        //文件还原
+        RestoreContext restoreContext=new RestoreContext();
+        restoreContext.setUserId(userId+1);
+        restoreContext.setFileIdList(Lists.newArrayList(fileId));
+        recycleService.restore(restoreContext);
+    }
+
+    /**
+     * 测试文件还原失败，文件名重复
+     */
+    @Test(expected = RPanBusinessException.class)
+    public void testFileRestoreFileByWrongFileName1(){
+        Long userId = register();
+        UserInfoVO info = info(userId);
+        //创建一个文件夹
+        CreateFolderContext context=new CreateFolderContext();
+        context.setParentId(info.getRootFileId());
+        context.setUserId(userId);
+        context.setFolderName("test");
+        Long fileId1 = userFileService.createFolder(context);
+        Assert.notNull(fileId1);
+        //删除该文件夹
+        DeleteFileContext deleteFileContext=new DeleteFileContext();
+        List<Long> fileIdList=new ArrayList<>();
+        fileIdList.add(fileId1);
+        deleteFileContext.setFileIdList(fileIdList);
+        deleteFileContext.setUserId(userId);
+        userFileService.deleteFile(deleteFileContext);
+        //创建一个同名的文件夹
+        CreateFolderContext context2=new CreateFolderContext();
+        context2.setParentId(info.getRootFileId());
+        context2.setUserId(userId);
+        context2.setFolderName("test");
+        Long fileId2 = userFileService.createFolder(context2);
+        Assert.notNull(fileId2);
+        //文件还原
+        RestoreContext restoreContext=new RestoreContext();
+        restoreContext.setUserId(userId);
+        restoreContext.setFileIdList(Lists.newArrayList(fileId1));
+        recycleService.restore(restoreContext);
+    }
+    /**
+     * 测试文件还原失败，回收站俩个相同的文件名
+     */
+    @Test(expected = RPanBusinessException.class)
+    public void testFileRestoreFileByWrongFileName2(){
+        Long userId = register();
+        UserInfoVO info = info(userId);
+        //创建一个文件夹
+        CreateFolderContext context=new CreateFolderContext();
+        context.setParentId(info.getRootFileId());
+        context.setUserId(userId);
+        context.setFolderName("test");
+        Long fileId1 = userFileService.createFolder(context);
+        Assert.notNull(fileId1);
+        //删除该文件夹
+        DeleteFileContext deleteFileContext=new DeleteFileContext();
+        List<Long> fileIdList=new ArrayList<>();
+        fileIdList.add(fileId1);
+        deleteFileContext.setFileIdList(fileIdList);
+        deleteFileContext.setUserId(userId);
+        userFileService.deleteFile(deleteFileContext);
+        //创建一个同名的文件夹
+        CreateFolderContext context2=new CreateFolderContext();
+        context2.setParentId(info.getRootFileId());
+        context2.setUserId(userId);
+        context2.setFolderName("test");
+        Long fileId2 = userFileService.createFolder(context2);
+        Assert.notNull(fileId2);
+        //删除该同名的文件
+        DeleteFileContext deleteFileContext2=new DeleteFileContext();
+        List<Long> fileIdList2=new ArrayList<>();
+        fileIdList2.add(fileId2);
+        deleteFileContext2.setFileIdList(fileIdList2);
+        deleteFileContext2.setUserId(userId);
+        userFileService.deleteFile(deleteFileContext2);
+        //文件还原
+        RestoreContext restoreContext=new RestoreContext();
+        restoreContext.setUserId(userId);
+        restoreContext.setFileIdList(Lists.newArrayList(fileId1,fileId2));
+        recycleService.restore(restoreContext);
+    }
+
 
     /**
      * 用户注册

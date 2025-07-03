@@ -2,6 +2,7 @@ package xyz.xlls.rpan.server.modules.recycle.service;
 
 import xyz.xlls.rpan.server.modules.file.vo.RPanUserFileVO;
 import xyz.xlls.rpan.server.modules.recycle.context.QueryRecycleFileListContext;
+import xyz.xlls.rpan.server.modules.recycle.context.RestoreContext;
 
 import java.util.List;
 
@@ -12,4 +13,10 @@ public interface IRecycleService {
      * @return
      */
     List<RPanUserFileVO> recycles(QueryRecycleFileListContext context);
+
+    /**
+     * 文件还原
+     * @param context
+     */
+    void restore(RestoreContext context);
 }
