@@ -10,6 +10,7 @@ import org.springframework.context.ApplicationContextAware;
 import org.springframework.stereotype.Service;
 import xyz.xlls.rpan.core.constants.RPanConstants;
 import xyz.xlls.rpan.core.exception.RPanBusinessException;
+import xyz.xlls.rpan.server.common.event.file.FilePhysicalDeleteEvent;
 import xyz.xlls.rpan.server.common.event.file.FileRestoreEvent;
 import xyz.xlls.rpan.server.modules.file.context.QueryFileContext;
 import xyz.xlls.rpan.server.modules.file.entity.RPanUserFile;
@@ -17,6 +18,7 @@ import xyz.xlls.rpan.server.modules.file.enums.DelFlagEnum;
 import xyz.xlls.rpan.server.modules.file.service.IUserFileService;
 import xyz.xlls.rpan.server.modules.file.service.impl.UserFileServiceImpl;
 import xyz.xlls.rpan.server.modules.file.vo.RPanUserFileVO;
+import xyz.xlls.rpan.server.modules.recycle.context.DeleteContext;
 import xyz.xlls.rpan.server.modules.recycle.context.QueryRecycleFileListContext;
 import xyz.xlls.rpan.server.modules.recycle.context.RestoreContext;
 import xyz.xlls.rpan.server.modules.recycle.service.IRecycleService;
@@ -65,6 +67,69 @@ public class RecycleServiceImpl implements IRecycleService, ApplicationContextAw
         CheckRestoreFilename(context);
         doRestore(context);
         afterRestore(context);
+    }
+
+    /**
+     * 文件彻底删除
+     * 1、校验操作权限
+     * 2、递归查找所有子文件
+     * 3、执行文件删除的动作
+     * 4、删除后的后置动作
+     * @param context
+     */
+    @Override
+    public void delete(DeleteContext context) {
+        checkFileDeletePermission(context);
+        findAllFileRecord( context);
+        doDelete(context);
+        afterDelete(context);
+    }
+
+    /**
+     * 文件彻底删除之后的后置函数
+     * 1、发送一个文件彻底删除的事件
+     * @param context
+     */
+    private void afterDelete(DeleteContext context) {
+        FilePhysicalDeleteEvent event = new FilePhysicalDeleteEvent(this, context.getAllRecords());
+        applicationContext.publishEvent(event);
+
+    }
+
+    /**
+     * 执行文件删除的动作
+     * @param context
+     */
+    private void doDelete(DeleteContext context) {
+        List<Long> fileIdList = context.getFileIdList();
+        if(!userFileService.removeByIds(fileIdList)){
+            throw new RPanBusinessException("文件删除失败");
+        }
+    }
+
+    /**
+     * 递归查询所有的子文件
+     * @param context
+     */
+    private void findAllFileRecord(DeleteContext context) {
+        List<RPanUserFile> records = context.getRecords();
+        List<RPanUserFile> allRecords= userFileService.findAllFileRecords(records);
+        context.setAllRecords(allRecords);
+    }
+
+    /**
+     * 校验文件删除的操作权限
+     * @param context
+     */
+    private void checkFileDeletePermission(DeleteContext context) {
+        LambdaQueryWrapper<RPanUserFile> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(RPanUserFile::getUserId, context.getUserId());
+        queryWrapper.in(RPanUserFile::getFileId,context.getFileIdList());
+        List<RPanUserFile> records= userFileService.list(queryWrapper);
+        if(CollectionUtil.isEmpty(records)||records.size()!=context.getFileIdList().size()){
+            throw new RPanBusinessException("您无权删除该文件");
+        }
+        context.setRecords(records);
     }
 
     /**

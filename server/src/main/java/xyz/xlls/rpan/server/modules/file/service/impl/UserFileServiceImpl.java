@@ -1,6 +1,7 @@
 package xyz.xlls.rpan.server.modules.file.service.impl;
 
 import cn.hutool.core.collection.CollectionUtil;
+import cn.hutool.core.util.ObjectUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -393,6 +394,59 @@ public class UserFileServiceImpl extends ServiceImpl<RPanUserFileMapper, RPanUse
 
         }while (Objects.nonNull(currentNode));
         return result;
+    }
+
+    /**
+     * 递归查询所有的子文件信息
+     * @param records
+     * @return
+     */
+    @Override
+    public List<RPanUserFile> findAllFileRecords(List<RPanUserFile> records) {
+        List<RPanUserFile> result=new ArrayList<>();
+        if(CollectionUtil.isEmpty(result)){
+            return result;
+        }
+        long folderCount = result.stream().filter(record -> ObjectUtil.equal(record.getFolderFlag(), FolderFlagEnum.YES.getCode())).count();
+        if(folderCount==0){
+            return result;
+        }
+        result.forEach(record->doFindAllChildRecords(result,record));
+        return Collections.emptyList();
+    }
+
+    /**
+     * 递归查询所有子文件列表，忽略是否删除的标识
+     * @param result
+     * @param record
+     */
+    private void doFindAllChildRecords(List<RPanUserFile> result, RPanUserFile record) {
+        if (Objects.isNull(record)) {
+            return;
+        }
+        if (!checkIsFolder(record)) {
+            return;
+        }
+        List<RPanUserFile> childRecords = findChildRecordsIgnoreDelFlag(record.getFileId());
+        if (CollectionUtil.isEmpty(childRecords)) {
+            return;
+        }
+        result.addAll(childRecords);
+        childRecords.stream()
+                .filter(childRecord-> ObjectUtil.equal(childRecord.getFolderFlag(), FolderFlagEnum.YES.getCode()))
+                .forEach(childRecord->doFindAllChildRecords(result,childRecord));
+    }
+
+    /**
+     * 查询文件下面的文件记录，忽略删除表示
+     * @param fileId
+     * @return
+     */
+    private List<RPanUserFile> findChildRecordsIgnoreDelFlag(Long fileId) {
+        LambdaQueryWrapper<RPanUserFile> queryWrapper=new LambdaQueryWrapper<>();
+        queryWrapper.eq(RPanUserFile::getParentId, fileId);
+        List<RPanUserFile> childRecords = list(queryWrapper);
+        return childRecords;
     }
 
     /**

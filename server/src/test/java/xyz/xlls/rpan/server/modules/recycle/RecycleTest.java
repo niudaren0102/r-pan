@@ -14,6 +14,7 @@ import xyz.xlls.rpan.server.modules.file.context.CreateFolderContext;
 import xyz.xlls.rpan.server.modules.file.context.DeleteFileContext;
 import xyz.xlls.rpan.server.modules.file.service.IUserFileService;
 import xyz.xlls.rpan.server.modules.file.vo.RPanUserFileVO;
+import xyz.xlls.rpan.server.modules.recycle.context.DeleteContext;
 import xyz.xlls.rpan.server.modules.recycle.context.QueryRecycleFileListContext;
 import xyz.xlls.rpan.server.modules.recycle.context.RestoreContext;
 import xyz.xlls.rpan.server.modules.recycle.service.IRecycleService;
@@ -199,7 +200,61 @@ public class RecycleTest {
         recycleService.restore(restoreContext);
     }
 
+    /**
+     * 测试文件删除失败，没有操作权限
+     */
+    @Test(expected = RPanBusinessException.class)
+    public void testFileDeleteFileByWrongUserId(){
+        Long userId = register();
+        UserInfoVO info = info(userId);
+        //创建一个文件夹
+        CreateFolderContext context=new CreateFolderContext();
+        context.setParentId(info.getRootFileId());
+        context.setUserId(userId);
+        context.setFolderName("test");
+        Long fileId = userFileService.createFolder(context);
+        Assert.notNull(fileId);
+        //删除该文件夹
+        DeleteFileContext deleteFileContext=new DeleteFileContext();
+        List<Long> fileIdList=new ArrayList<>();
+        fileIdList.add(fileId);
+        deleteFileContext.setFileIdList(fileIdList);
+        deleteFileContext.setUserId(userId);
+        userFileService.deleteFile(deleteFileContext);
+        //文件还原
+        DeleteContext deleteContext=new DeleteContext();
+        deleteContext.setUserId(userId+1);
+        deleteContext.setFileIdList(Lists.newArrayList(fileId));
+        recycleService.delete(deleteContext);
+    }
 
+    /**
+     * 测试文件还原成功
+     */
+    @Test
+    public void testFileDeleteSuccess(){
+        Long userId = register();
+        UserInfoVO info = info(userId);
+        //创建一个文件夹
+        CreateFolderContext context=new CreateFolderContext();
+        context.setParentId(info.getRootFileId());
+        context.setUserId(userId);
+        context.setFolderName("test");
+        Long fileId = userFileService.createFolder(context);
+        Assert.notNull(fileId);
+        //删除该文件夹
+        DeleteFileContext deleteFileContext=new DeleteFileContext();
+        List<Long> fileIdList=new ArrayList<>();
+        fileIdList.add(fileId);
+        deleteFileContext.setFileIdList(fileIdList);
+        deleteFileContext.setUserId(userId);
+        userFileService.deleteFile(deleteFileContext);
+        //文件还原
+        DeleteContext deleteContext=new DeleteContext();
+        deleteContext.setUserId(userId);
+        deleteContext.setFileIdList(Lists.newArrayList(fileId));
+        recycleService.delete(deleteContext);
+    }
     /**
      * 用户注册
      * @return 新用户的id
