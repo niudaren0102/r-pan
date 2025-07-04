@@ -11,6 +11,7 @@ import xyz.xlls.rpan.core.exception.RPanBusinessException;
 import xyz.xlls.rpan.core.utils.IdUtil;
 import xyz.xlls.rpan.server.common.config.PanServerConfig;
 import xyz.xlls.rpan.server.modules.share.context.CreateShareUrlContext;
+import xyz.xlls.rpan.server.modules.share.context.QueryShareUrlListContext;
 import xyz.xlls.rpan.server.modules.share.context.SaveShareFilesContext;
 import xyz.xlls.rpan.server.modules.share.entity.RPanShare;
 import xyz.xlls.rpan.server.modules.share.enums.ShareDayTypeEnum;
@@ -19,9 +20,12 @@ import xyz.xlls.rpan.server.modules.share.service.IShareFileService;
 import xyz.xlls.rpan.server.modules.share.service.IShareService;
 import xyz.xlls.rpan.server.modules.share.mapper.RPanShareMapper;
 import org.springframework.stereotype.Service;
+import xyz.xlls.rpan.server.modules.share.vo.RPanShareUrlListVO;
 import xyz.xlls.rpan.server.modules.share.vo.RPanShareUrlVO;
 
+import java.util.Collections;
 import java.util.Date;
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -52,6 +56,15 @@ public class ShareServiceImpl extends ServiceImpl<RPanShareMapper, RPanShare>
         saveShare(context);
         saveShareFiles(context);
         return assembleShareVO(context);
+    }
+    /**
+     * 查询用户的分享列表
+     * @param context
+     * @return
+     */
+    @Override
+    public List<RPanShareUrlListVO> getShares(QueryShareUrlListContext context) {
+       return baseMapper.selectShareVOListByUserId(context.getUserId());
     }
 
     /**

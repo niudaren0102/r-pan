@@ -13,14 +13,18 @@ import xyz.xlls.rpan.server.RPanServerLauncher;
 import xyz.xlls.rpan.server.modules.file.context.CreateFolderContext;
 import xyz.xlls.rpan.server.modules.file.service.IUserFileService;
 import xyz.xlls.rpan.server.modules.share.context.CreateShareUrlContext;
+import xyz.xlls.rpan.server.modules.share.context.QueryShareUrlListContext;
 import xyz.xlls.rpan.server.modules.share.enums.ShareDayTypeEnum;
 import xyz.xlls.rpan.server.modules.share.enums.ShareTypeEnum;
 import xyz.xlls.rpan.server.modules.share.service.IShareService;
+import xyz.xlls.rpan.server.modules.share.vo.RPanShareUrlListVO;
 import xyz.xlls.rpan.server.modules.share.vo.RPanShareUrlVO;
 import xyz.xlls.rpan.server.modules.user.context.UserLoginContext;
 import xyz.xlls.rpan.server.modules.user.context.UserRegisterContext;
 import xyz.xlls.rpan.server.modules.user.service.IUserService;
 import xyz.xlls.rpan.server.modules.user.vo.UserInfoVO;
+
+import java.util.List;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(classes = RPanServerLauncher.class)
@@ -55,6 +59,35 @@ public class ShareTest {
         createShareUrlContext.setUserId(userId);
         RPanShareUrlVO vo = shareService.create(createShareUrlContext);
         Assert.notNull(vo);
+    }
+    /**
+     * 查询分享链接列表成功
+     */
+    @Test
+    public void testQueryShareUrlListSuccess(){
+        Long userId = register();
+        UserInfoVO info = info(userId);
+        //创建一个文件夹
+        CreateFolderContext context=new CreateFolderContext();
+        context.setParentId(info.getRootFileId());
+        context.setUserId(userId);
+        context.setFolderName("test");
+        Long fileId = userFileService.createFolder(context);
+        Assert.notNull(fileId);
+        CreateShareUrlContext createShareUrlContext=new CreateShareUrlContext();
+        createShareUrlContext.setShareName("test");
+        createShareUrlContext.setShareType(ShareTypeEnum.NEED_SHARE_CODE.getCode());
+        createShareUrlContext.setShareDayType(ShareDayTypeEnum.SEVEN_DAYS_VALIDITY.getCode());
+        createShareUrlContext.setShareFileIdList(Lists.newArrayList(fileId));
+        createShareUrlContext.setUserId(userId);
+        RPanShareUrlVO vo = shareService.create(createShareUrlContext);
+        Assert.notNull(vo);
+
+        QueryShareUrlListContext queryShareUrlListContext = new QueryShareUrlListContext();
+        queryShareUrlListContext.setUserId(userId);
+        List<RPanShareUrlListVO> result = shareService.getShares(queryShareUrlListContext);
+        Assert.notEmpty(result);
+        Assert.isTrue(result.size()==1);
     }
     /**
      * 用户注册

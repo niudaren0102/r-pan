@@ -24,4 +24,18 @@
         share_url,share_code,share_status,
         create_user,create_time
     </sql>
+    <select id="selectShareVOListByUserId"
+            resultType="xyz.xlls.rpan.server.modules.share.vo.RPanShareUrlListVO">
+        SELECT share_id AS shareId,
+               share_name AS shareName,
+               share_url AS shareUrl,
+               share_code AS shareCode,
+               share_status AS shareStatus,
+               share_type AS shareType,
+               share_day_type AS shareDayType,
+               share_end_time AS shareEndTime,
+               create_time AS createTime
+        FROM r_pan_share
+        WHERE create_user = #{userId}
+    </select>
 </mapper>

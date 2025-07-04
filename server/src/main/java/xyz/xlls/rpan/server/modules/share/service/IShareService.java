@@ -1,9 +1,13 @@
 package xyz.xlls.rpan.server.modules.share.service;
 
 import xyz.xlls.rpan.server.modules.share.context.CreateShareUrlContext;
+import xyz.xlls.rpan.server.modules.share.context.QueryShareUrlListContext;
 import xyz.xlls.rpan.server.modules.share.entity.RPanShare;
 import com.baomidou.mybatisplus.extension.service.IService;
+import xyz.xlls.rpan.server.modules.share.vo.RPanShareUrlListVO;
 import xyz.xlls.rpan.server.modules.share.vo.RPanShareUrlVO;
+
+import java.util.List;
 
 /**
 * @author Administrator
@@ -17,4 +21,11 @@ public interface IShareService extends IService<RPanShare> {
      * @return
      */
     RPanShareUrlVO create(CreateShareUrlContext context);
+
+    /**
+     * 查询用户的分享列表
+     * @param context
+     * @return
+     */
+    List<RPanShareUrlListVO> getShares(QueryShareUrlListContext context);
 }
