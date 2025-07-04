@@ -5,6 +5,12 @@
       "type": "java.lang.Integer",
       "description": "分片时间的过期天数",
       "defaultValue": "1"
+    },
+    {
+      "name": "xyz.xlls.rpan.server.share-prefix",
+      "type": "java.lang.String",
+      "description": "分享链接前缀",
+      "defaultValue": "http://127.0.0.1:serverPort/share/"
     }
   ]
 }

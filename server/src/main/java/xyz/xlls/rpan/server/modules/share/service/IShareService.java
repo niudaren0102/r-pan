@@ -1,0 +1,20 @@
+package xyz.xlls.rpan.server.modules.share.service;
+
+import xyz.xlls.rpan.server.modules.share.context.CreateShareUrlContext;
+import xyz.xlls.rpan.server.modules.share.entity.RPanShare;
+import com.baomidou.mybatisplus.extension.service.IService;
+import xyz.xlls.rpan.server.modules.share.vo.RPanShareUrlVO;
+
+/**
+* @author Administrator
+* @description 针对表【r_pan_share(用户分享表)】的数据库操作Service
+* @createDate 2024-10-22 15:08:03
+*/
+public interface IShareService extends IService<RPanShare> {
+    /**
+     * 创建分享链接
+     * @param context
+     * @return
+     */
+    RPanShareUrlVO create(CreateShareUrlContext context);
+}
