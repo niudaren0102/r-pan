@@ -1,8 +1,10 @@
 package xyz.xlls.rpan.server.modules.share.service.impl;
 
+import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.RandomUtil;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
@@ -10,10 +12,12 @@ import xyz.xlls.rpan.core.constants.RPanConstants;
 import xyz.xlls.rpan.core.exception.RPanBusinessException;
 import xyz.xlls.rpan.core.utils.IdUtil;
 import xyz.xlls.rpan.server.common.config.PanServerConfig;
+import xyz.xlls.rpan.server.modules.share.context.CancelShareUrlContext;
 import xyz.xlls.rpan.server.modules.share.context.CreateShareUrlContext;
 import xyz.xlls.rpan.server.modules.share.context.QueryShareUrlListContext;
 import xyz.xlls.rpan.server.modules.share.context.SaveShareFilesContext;
 import xyz.xlls.rpan.server.modules.share.entity.RPanShare;
+import xyz.xlls.rpan.server.modules.share.entity.RPanShareFile;
 import xyz.xlls.rpan.server.modules.share.enums.ShareDayTypeEnum;
 import xyz.xlls.rpan.server.modules.share.enums.ShareStatusEnum;
 import xyz.xlls.rpan.server.modules.share.service.IShareFileService;
@@ -23,7 +27,6 @@ import org.springframework.stereotype.Service;
 import xyz.xlls.rpan.server.modules.share.vo.RPanShareUrlListVO;
 import xyz.xlls.rpan.server.modules.share.vo.RPanShareUrlVO;
 
-import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
@@ -65,6 +68,64 @@ public class ShareServiceImpl extends ServiceImpl<RPanShareMapper, RPanShare>
     @Override
     public List<RPanShareUrlListVO> getShares(QueryShareUrlListContext context) {
        return baseMapper.selectShareVOListByUserId(context.getUserId());
+    }
+
+    /**
+     * 取消分享链接
+     * 1、检验用户操作权限
+     * 2、删除对应的分享记录
+     * 3、删除对应的分享文件关联关系记录
+     * @param context
+     */
+    @Transactional(rollbackFor = RPanBusinessException.class)
+    @Override
+    public void cancelShare(CancelShareUrlContext context) {
+        checkUserCancelSharePermission(context);
+        doCancelShare( context);
+        doCancelShareFiles(context);
+
+    }
+
+    /**
+     * 取消文件和分享的关联关系数据
+     * @param context
+     */
+    private void doCancelShareFiles(CancelShareUrlContext context) {
+        LambdaQueryWrapper<RPanShareFile> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.in(RPanShareFile::getShareId,context.getShareIdList());
+        queryWrapper.eq(RPanShareFile::getCreateUser,context.getUserId());
+        if(!shareFileService.remove(queryWrapper)){
+            throw new RPanBusinessException("取消文件分享失败");
+        }
+    }
+
+    /**
+     * 取消文件分享的动作
+     * @param context
+     */
+    private void doCancelShare(CancelShareUrlContext context) {
+        List<Long> shareIdList = context.getShareIdList();
+        if(!removeByIds(shareIdList)){
+            throw new RPanBusinessException("取消分享失败");
+        }
+    }
+
+    /**
+     * 检查用户是否拥有取消对应分享链接的权限
+     * @param context
+     */
+    private void checkUserCancelSharePermission(CancelShareUrlContext context) {
+        List<Long> shareIdList = context.getShareIdList();
+        Long userId = context.getUserId();
+        List<RPanShare> records = listByIds(shareIdList);
+        if(CollectionUtil.isEmpty( records)){
+            throw new RPanBusinessException("您无权限取消分享的动作");
+        }
+       records.forEach(record->{
+           if(!Objects.equals(record.getCreateUser(),userId)){
+               throw new RPanBusinessException("您无权限取消分享的动作");
+           }
+       });
     }
 
     /**

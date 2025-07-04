@@ -1,5 +1,6 @@
 package xyz.xlls.rpan.server.modules.share;
 
+import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.lang.Assert;
 import com.alibaba.fastjson.JSON;
 import com.google.common.collect.Lists;
@@ -12,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 import xyz.xlls.rpan.server.RPanServerLauncher;
 import xyz.xlls.rpan.server.modules.file.context.CreateFolderContext;
 import xyz.xlls.rpan.server.modules.file.service.IUserFileService;
+import xyz.xlls.rpan.server.modules.share.context.CancelShareUrlContext;
 import xyz.xlls.rpan.server.modules.share.context.CreateShareUrlContext;
 import xyz.xlls.rpan.server.modules.share.context.QueryShareUrlListContext;
 import xyz.xlls.rpan.server.modules.share.enums.ShareDayTypeEnum;
@@ -88,6 +90,39 @@ public class ShareTest {
         List<RPanShareUrlListVO> result = shareService.getShares(queryShareUrlListContext);
         Assert.notEmpty(result);
         Assert.isTrue(result.size()==1);
+    }
+    /**
+     * 取消享链接成功
+     */
+    @Test
+    public void testCancelShareSuccess(){
+        Long userId = register();
+        UserInfoVO info = info(userId);
+        //创建一个文件夹
+        CreateFolderContext context=new CreateFolderContext();
+        context.setParentId(info.getRootFileId());
+        context.setUserId(userId);
+        context.setFolderName("test");
+        Long fileId = userFileService.createFolder(context);
+        Assert.notNull(fileId);
+        CreateShareUrlContext createShareUrlContext=new CreateShareUrlContext();
+        createShareUrlContext.setShareName("test");
+        createShareUrlContext.setShareType(ShareTypeEnum.NEED_SHARE_CODE.getCode());
+        createShareUrlContext.setShareDayType(ShareDayTypeEnum.SEVEN_DAYS_VALIDITY.getCode());
+        createShareUrlContext.setShareFileIdList(Lists.newArrayList(fileId));
+        createShareUrlContext.setUserId(userId);
+        RPanShareUrlVO vo = shareService.create(createShareUrlContext);
+        Assert.notNull(vo);
+
+        CancelShareUrlContext cancelShareUrlContext = new CancelShareUrlContext();
+        cancelShareUrlContext.setShareIdList(Lists.newArrayList(vo.getShareId()));
+        cancelShareUrlContext.setUserId(userId);
+        shareService.cancelShare(cancelShareUrlContext);
+
+        QueryShareUrlListContext queryShareUrlListContext = new QueryShareUrlListContext();
+        queryShareUrlListContext.setUserId(userId);
+        List<RPanShareUrlListVO> result = shareService.getShares(queryShareUrlListContext);
+        Assert.isTrue(CollectionUtil.isEmpty(result));
     }
     /**
      * 用户注册

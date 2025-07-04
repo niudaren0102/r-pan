@@ -1,5 +1,6 @@
 package xyz.xlls.rpan.server.modules.share.service;
 
+import xyz.xlls.rpan.server.modules.share.context.CancelShareUrlContext;
 import xyz.xlls.rpan.server.modules.share.context.CreateShareUrlContext;
 import xyz.xlls.rpan.server.modules.share.context.QueryShareUrlListContext;
 import xyz.xlls.rpan.server.modules.share.entity.RPanShare;
@@ -28,4 +29,10 @@ public interface IShareService extends IService<RPanShare> {
      * @return
      */
     List<RPanShareUrlListVO> getShares(QueryShareUrlListContext context);
+
+    /**
+     * 取消分享链接
+     * @param context
+     */
+    void cancelShare(CancelShareUrlContext context);
 }
