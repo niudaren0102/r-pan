@@ -10,10 +10,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.transaction.annotation.Transactional;
+import xyz.xlls.rpan.core.exception.RPanBusinessException;
 import xyz.xlls.rpan.server.RPanServerLauncher;
 import xyz.xlls.rpan.server.modules.file.context.CreateFolderContext;
 import xyz.xlls.rpan.server.modules.file.service.IUserFileService;
 import xyz.xlls.rpan.server.modules.share.context.CancelShareUrlContext;
+import xyz.xlls.rpan.server.modules.share.context.CheckShareCodeContext;
 import xyz.xlls.rpan.server.modules.share.context.CreateShareUrlContext;
 import xyz.xlls.rpan.server.modules.share.context.QueryShareUrlListContext;
 import xyz.xlls.rpan.server.modules.share.enums.ShareDayTypeEnum;
@@ -123,6 +125,63 @@ public class ShareTest {
         queryShareUrlListContext.setUserId(userId);
         List<RPanShareUrlListVO> result = shareService.getShares(queryShareUrlListContext);
         Assert.isTrue(CollectionUtil.isEmpty(result));
+    }
+    /**
+     * 校验分享码正确
+     */
+    @Test
+    public void testCheckShareCodeSuccess(){
+        Long userId = register();
+        UserInfoVO info = info(userId);
+        //创建一个文件夹
+        CreateFolderContext context=new CreateFolderContext();
+        context.setParentId(info.getRootFileId());
+        context.setUserId(userId);
+        context.setFolderName("test");
+        Long fileId = userFileService.createFolder(context);
+        Assert.notNull(fileId);
+        CreateShareUrlContext createShareUrlContext=new CreateShareUrlContext();
+        createShareUrlContext.setShareName("test");
+        createShareUrlContext.setShareType(ShareTypeEnum.NEED_SHARE_CODE.getCode());
+        createShareUrlContext.setShareDayType(ShareDayTypeEnum.SEVEN_DAYS_VALIDITY.getCode());
+        createShareUrlContext.setShareFileIdList(Lists.newArrayList(fileId));
+        createShareUrlContext.setUserId(userId);
+        RPanShareUrlVO vo = shareService.create(createShareUrlContext);
+        Assert.notNull(vo);
+        //校验分享码正确
+        CheckShareCodeContext checkShareCodeContext = new CheckShareCodeContext();
+        checkShareCodeContext.setShareId(vo.getShareId());
+        checkShareCodeContext.setShareCode(vo.getShareCode());
+        String token = shareService.checkShareCode(checkShareCodeContext);
+        Assert.notBlank(token);
+    }
+    /**
+     * 校验分享码错误
+     */
+    @Test(expected = RPanBusinessException.class)
+    public void testCheckShareCodeFail(){
+        Long userId = register();
+        UserInfoVO info = info(userId);
+        //创建一个文件夹
+        CreateFolderContext context=new CreateFolderContext();
+        context.setParentId(info.getRootFileId());
+        context.setUserId(userId);
+        context.setFolderName("test");
+        Long fileId = userFileService.createFolder(context);
+        Assert.notNull(fileId);
+        CreateShareUrlContext createShareUrlContext=new CreateShareUrlContext();
+        createShareUrlContext.setShareName("test");
+        createShareUrlContext.setShareType(ShareTypeEnum.NEED_SHARE_CODE.getCode());
+        createShareUrlContext.setShareDayType(ShareDayTypeEnum.SEVEN_DAYS_VALIDITY.getCode());
+        createShareUrlContext.setShareFileIdList(Lists.newArrayList(fileId));
+        createShareUrlContext.setUserId(userId);
+        RPanShareUrlVO vo = shareService.create(createShareUrlContext);
+        Assert.notNull(vo);
+        //校验分享码正确
+        CheckShareCodeContext checkShareCodeContext = new CheckShareCodeContext();
+        checkShareCodeContext.setShareId(vo.getShareId());
+        checkShareCodeContext.setShareCode("aaaa");
+        String token = shareService.checkShareCode(checkShareCodeContext);
     }
     /**
      * 用户注册

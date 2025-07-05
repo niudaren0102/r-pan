@@ -10,12 +10,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
 import xyz.xlls.rpan.core.constants.RPanConstants;
 import xyz.xlls.rpan.core.exception.RPanBusinessException;
+import xyz.xlls.rpan.core.response.ResponseCode;
 import xyz.xlls.rpan.core.utils.IdUtil;
+import xyz.xlls.rpan.core.utils.JwtUtil;
+import xyz.xlls.rpan.core.utils.UUIDUtil;
 import xyz.xlls.rpan.server.common.config.PanServerConfig;
-import xyz.xlls.rpan.server.modules.share.context.CancelShareUrlContext;
-import xyz.xlls.rpan.server.modules.share.context.CreateShareUrlContext;
-import xyz.xlls.rpan.server.modules.share.context.QueryShareUrlListContext;
-import xyz.xlls.rpan.server.modules.share.context.SaveShareFilesContext;
+import xyz.xlls.rpan.server.modules.share.constants.ShareConstant;
+import xyz.xlls.rpan.server.modules.share.context.*;
 import xyz.xlls.rpan.server.modules.share.entity.RPanShare;
 import xyz.xlls.rpan.server.modules.share.entity.RPanShareFile;
 import xyz.xlls.rpan.server.modules.share.enums.ShareDayTypeEnum;
@@ -84,6 +85,63 @@ public class ShareServiceImpl extends ServiceImpl<RPanShareMapper, RPanShare>
         doCancelShare( context);
         doCancelShareFiles(context);
 
+    }
+
+    /**
+     * 校验分享码
+     * 1、检查分享的状态是不是正常
+     * 2、校验分享码是不是正确
+     * 3、生成一个短时间的分享token返回给上游
+     * @param context
+     * @return
+     */
+    @Override
+    public String checkShareCode(CheckShareCodeContext context) {
+        checkShareStatus(context);
+        doCheckShareCode(context);
+        return  generateShareToken(context);
+    }
+
+    /**
+     * 生成一个短期的分享token
+     * @param context
+     */
+    private String generateShareToken(CheckShareCodeContext context) {
+        RPanShare record = context.getRecord();
+        String token = JwtUtil.generateToken(UUIDUtil.getUUID(), ShareConstant.SHARE_ID, record.getShareId(), ShareConstant.ONE_HOUR_LONG);
+        return token;
+    }
+
+    /**
+     * 校验分享码是否正确
+     * @param context
+     */
+    private void doCheckShareCode(CheckShareCodeContext context) {
+        RPanShare record = context.getRecord();
+        if(!Objects.equals(context.getShareCode(),record.getShareCode())){
+            throw new RPanBusinessException("分享码错误");
+        }
+    }
+
+    /**
+     * 检查分享的状态是否正常
+     * @param context
+     */
+    private void checkShareStatus(CheckShareCodeContext context) {
+        Long shareId = context.getShareId();
+        RPanShare record = this.getById(shareId);
+        if(ObjectUtil.isNull(record)){
+            throw new RPanBusinessException(ResponseCode.SHARE_CANCELLED);
+        }
+        if(Objects.equals(ShareStatusEnum.FILE_DELETED.getCode(),record.getShareStatus())){
+            throw new RPanBusinessException(ResponseCode.SHARE_FILE_MISS);
+        }
+        if(!Objects.equals(ShareDayTypeEnum.PERMANENT_VALIDITY.getCode(),record.getShareDayType())){
+           if(record.getShareEndTime().before(new Date())){
+               throw new RPanBusinessException(ResponseCode.SHARE_EXPIRE);
+           }
+        }
+        context.setRecord(record);
     }
 
     /**

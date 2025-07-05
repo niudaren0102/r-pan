@@ -10,12 +10,15 @@ import org.springframework.web.bind.annotation.*;
 import xyz.xlls.rpan.core.constants.RPanConstants;
 import xyz.xlls.rpan.core.response.R;
 import xyz.xlls.rpan.core.utils.IdUtil;
+import xyz.xlls.rpan.server.common.annotation.LoginIgnore;
 import xyz.xlls.rpan.server.common.utils.UserIdUtil;
 import xyz.xlls.rpan.server.modules.share.Converter.ShareConverter;
+import xyz.xlls.rpan.server.modules.share.context.CheckShareCodeContext;
 import xyz.xlls.rpan.server.modules.share.context.CreateShareUrlContext;
 import xyz.xlls.rpan.server.modules.share.context.QueryShareUrlListContext;
 import xyz.xlls.rpan.server.modules.share.context.CancelShareUrlContext;
 import xyz.xlls.rpan.server.modules.share.po.CancelShareUrlPO;
+import xyz.xlls.rpan.server.modules.share.po.CheckShareCodePO;
 import xyz.xlls.rpan.server.modules.share.po.CreateShareUrlPO;
 import xyz.xlls.rpan.server.modules.share.service.IShareService;
 import xyz.xlls.rpan.server.modules.share.vo.RPanShareUrlVO;
@@ -69,5 +72,18 @@ public class ShareController {
         context.setShareIdList(shareIdList);
         shareService.cancelShare(context);
         return R.success();
+    }
+    @ApiOperation(value = "检验分享码",
+            notes = "该接口提供了校验分享码的功能",
+            consumes = MediaType.APPLICATION_JSON_UTF8_VALUE,
+            produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+    @PostMapping("share/code/check")
+    @LoginIgnore
+    public R<String> checkShareCode(@Validated @RequestBody CheckShareCodePO checkShareCodePO){
+        CheckShareCodeContext context = new CheckShareCodeContext();
+        context.setShareId(IdUtil.decrypt(checkShareCodePO.getShareCode()));
+        context.setShareCode(checkShareCodePO.getShareCode());
+        String token=shareService.checkShareCode(context);
+        return R.data(token);
     }
 }
