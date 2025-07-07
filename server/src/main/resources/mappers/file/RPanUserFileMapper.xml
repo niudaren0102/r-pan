@@ -40,6 +40,12 @@
         r_pan_user_file
         where
         user_id=#{param.userId}
+          <if test="param.FileIdList!=null">
+              AND file_id in
+              <foreach item="item" collection="param.FileIdList" open="(" separator="," close=")">
+                  #{item}
+              </foreach>
+          </if>
         <if test="param.parentId != null and param.parentId!=-1">
             and parent_id=#{param.parentId}
         </if>

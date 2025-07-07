@@ -1,13 +1,11 @@
 package xyz.xlls.rpan.server.modules.share.service;
 
-import xyz.xlls.rpan.server.modules.share.context.CancelShareUrlContext;
-import xyz.xlls.rpan.server.modules.share.context.CheckShareCodeContext;
-import xyz.xlls.rpan.server.modules.share.context.CreateShareUrlContext;
-import xyz.xlls.rpan.server.modules.share.context.QueryShareUrlListContext;
+import xyz.xlls.rpan.server.modules.share.context.*;
 import xyz.xlls.rpan.server.modules.share.entity.RPanShare;
 import com.baomidou.mybatisplus.extension.service.IService;
 import xyz.xlls.rpan.server.modules.share.vo.RPanShareUrlListVO;
 import xyz.xlls.rpan.server.modules.share.vo.RPanShareUrlVO;
+import xyz.xlls.rpan.server.modules.share.vo.ShareDetailVO;
 
 import java.util.List;
 
@@ -43,4 +41,11 @@ public interface IShareService extends IService<RPanShare> {
      * @return
      */
     String checkShareCode(CheckShareCodeContext context);
+
+    /**
+     * 查询分享的详情
+     * @param context
+     * @return
+     */
+    ShareDetailVO detail(QueryShareDetailContext context);
 }

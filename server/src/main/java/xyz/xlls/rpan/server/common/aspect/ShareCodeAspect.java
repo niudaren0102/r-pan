@@ -44,7 +44,7 @@ public class ShareCodeAspect {
     /**
      * 切点表达式
      */
-    private final static String POINT_CUT = "annotation(xyz.xlls.rpan.server.common.annotation.NeedShareCode)";
+    private final static String POINT_CUT = "@annotation(xyz.xlls.rpan.server.common.annotation.NeedShareCode)";
 
     /**
      * 切点模板方法

@@ -11,18 +11,18 @@ import xyz.xlls.rpan.core.constants.RPanConstants;
 import xyz.xlls.rpan.core.response.R;
 import xyz.xlls.rpan.core.utils.IdUtil;
 import xyz.xlls.rpan.server.common.annotation.LoginIgnore;
+import xyz.xlls.rpan.server.common.annotation.NeedShareCode;
+import xyz.xlls.rpan.server.common.utils.ShareIdUtil;
 import xyz.xlls.rpan.server.common.utils.UserIdUtil;
 import xyz.xlls.rpan.server.modules.share.Converter.ShareConverter;
-import xyz.xlls.rpan.server.modules.share.context.CheckShareCodeContext;
-import xyz.xlls.rpan.server.modules.share.context.CreateShareUrlContext;
-import xyz.xlls.rpan.server.modules.share.context.QueryShareUrlListContext;
-import xyz.xlls.rpan.server.modules.share.context.CancelShareUrlContext;
+import xyz.xlls.rpan.server.modules.share.context.*;
 import xyz.xlls.rpan.server.modules.share.po.CancelShareUrlPO;
 import xyz.xlls.rpan.server.modules.share.po.CheckShareCodePO;
 import xyz.xlls.rpan.server.modules.share.po.CreateShareUrlPO;
 import xyz.xlls.rpan.server.modules.share.service.IShareService;
 import xyz.xlls.rpan.server.modules.share.vo.RPanShareUrlVO;
 import xyz.xlls.rpan.server.modules.share.vo.RPanShareUrlListVO;
+import xyz.xlls.rpan.server.modules.share.vo.ShareDetailVO;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -85,5 +85,19 @@ public class ShareController {
         context.setShareCode(checkShareCodePO.getShareCode());
         String token=shareService.checkShareCode(context);
         return R.data(token);
+    }
+    @ApiOperation(
+            value = "查询文件分享详情",
+            notes = "该接口提供了查询文件分享详情的功能",
+            consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE,
+            produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+    @LoginIgnore
+    @NeedShareCode
+    @GetMapping("share")
+    public R<ShareDetailVO> detail(){
+        QueryShareDetailContext context = new QueryShareDetailContext();
+        context.setShareId(ShareIdUtil.get());
+        ShareDetailVO vo=shareService.detail(context);
+        return R.data( vo);
     }
 }

@@ -10,8 +10,6 @@ import org.springframework.web.bind.annotation.*;
 import xyz.xlls.rpan.core.constants.RPanConstants;
 import xyz.xlls.rpan.core.response.R;
 import xyz.xlls.rpan.core.utils.IdUtil;
-import xyz.xlls.rpan.server.common.annotation.LoginIgnore;
-import xyz.xlls.rpan.server.common.annotation.NeedShareCode;
 import xyz.xlls.rpan.server.common.utils.UserIdUtil;
 import xyz.xlls.rpan.server.modules.file.vo.RPanUserFileVO;
 import xyz.xlls.rpan.server.modules.recycle.context.DeleteContext;
@@ -20,7 +18,6 @@ import xyz.xlls.rpan.server.modules.recycle.context.RestoreContext;
 import xyz.xlls.rpan.server.modules.recycle.po.DeletePO;
 import xyz.xlls.rpan.server.modules.recycle.po.RestorePO;
 import xyz.xlls.rpan.server.modules.recycle.service.IRecycleService;
-import xyz.xlls.rpan.server.modules.recycle.vo.ShareDetailVO;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -76,17 +73,5 @@ public class RecycleController {
         recycleService.delete(context);
         return R.success();
     }
-    @ApiOperation(
-            value = "查询文件分享详情",
-            notes = "该接口提供了查询文件分享详情的功能",
-            consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE,
-            produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
-    @LoginIgnore
-    @NeedShareCode
-    @GetMapping("share")
-    public R<ShareDetailVO> detail(){
-        QueryShareDetailContext context = new QueryShareDetailContext();
-        ShareDetailVO vo=shareService.detail(context);
-        return R.data( vo);
-    }
+
 }

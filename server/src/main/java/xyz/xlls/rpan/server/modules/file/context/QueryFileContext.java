@@ -27,5 +27,8 @@ public class QueryFileContext implements Serializable {
      * 文件的删除标识
      */
     private Integer delFlag;
-
+    /**
+     * 文件ID集合
+     */
+    private List<Long> fileIdList;
 }

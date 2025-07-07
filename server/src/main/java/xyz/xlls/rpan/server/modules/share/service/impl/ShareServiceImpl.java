@@ -15,6 +15,10 @@ import xyz.xlls.rpan.core.utils.IdUtil;
 import xyz.xlls.rpan.core.utils.JwtUtil;
 import xyz.xlls.rpan.core.utils.UUIDUtil;
 import xyz.xlls.rpan.server.common.config.PanServerConfig;
+import xyz.xlls.rpan.server.modules.file.context.QueryFileContext;
+import xyz.xlls.rpan.server.modules.file.enums.DelFlagEnum;
+import xyz.xlls.rpan.server.modules.file.service.IUserFileService;
+import xyz.xlls.rpan.server.modules.file.vo.RPanUserFileVO;
 import xyz.xlls.rpan.server.modules.share.constants.ShareConstant;
 import xyz.xlls.rpan.server.modules.share.context.*;
 import xyz.xlls.rpan.server.modules.share.entity.RPanShare;
@@ -27,6 +31,10 @@ import xyz.xlls.rpan.server.modules.share.mapper.RPanShareMapper;
 import org.springframework.stereotype.Service;
 import xyz.xlls.rpan.server.modules.share.vo.RPanShareUrlListVO;
 import xyz.xlls.rpan.server.modules.share.vo.RPanShareUrlVO;
+import xyz.xlls.rpan.server.modules.share.vo.ShareDetailVO;
+import xyz.xlls.rpan.server.modules.share.vo.ShareUserInfoVO;
+import xyz.xlls.rpan.server.modules.user.entity.RPanUser;
+import xyz.xlls.rpan.server.modules.user.service.IUserService;
 
 import java.util.Date;
 import java.util.List;
@@ -44,6 +52,10 @@ public class ShareServiceImpl extends ServiceImpl<RPanShareMapper, RPanShare>
     private PanServerConfig config;
     @Autowired
     private IShareFileService shareFileService;
+    @Autowired
+    private IUserFileService userFileService;
+    @Autowired
+    private IUserService userService;
 
     /**
      * 创建分享链接
@@ -61,14 +73,16 @@ public class ShareServiceImpl extends ServiceImpl<RPanShareMapper, RPanShare>
         saveShareFiles(context);
         return assembleShareVO(context);
     }
+
     /**
      * 查询用户的分享列表
+     *
      * @param context
      * @return
      */
     @Override
     public List<RPanShareUrlListVO> getShares(QueryShareUrlListContext context) {
-       return baseMapper.selectShareVOListByUserId(context.getUserId());
+        return baseMapper.selectShareVOListByUserId(context.getUserId());
     }
 
     /**
@@ -76,13 +90,14 @@ public class ShareServiceImpl extends ServiceImpl<RPanShareMapper, RPanShare>
      * 1、检验用户操作权限
      * 2、删除对应的分享记录
      * 3、删除对应的分享文件关联关系记录
+     *
      * @param context
      */
     @Transactional(rollbackFor = RPanBusinessException.class)
     @Override
     public void cancelShare(CancelShareUrlContext context) {
         checkUserCancelSharePermission(context);
-        doCancelShare( context);
+        doCancelShare(context);
         doCancelShareFiles(context);
 
     }
@@ -92,18 +107,114 @@ public class ShareServiceImpl extends ServiceImpl<RPanShareMapper, RPanShare>
      * 1、检查分享的状态是不是正常
      * 2、校验分享码是不是正确
      * 3、生成一个短时间的分享token返回给上游
+     *
      * @param context
      * @return
      */
     @Override
     public String checkShareCode(CheckShareCodeContext context) {
-        checkShareStatus(context);
+        RPanShare record = checkShareStatus(context.getShareId());
+        context.setRecord(record);
         doCheckShareCode(context);
-        return  generateShareToken(context);
+        return generateShareToken(context);
+    }
+
+    /**
+     * 1、校验分享的状态
+     * 2、初始化分享实体
+     * 3、查询分享的主体信息
+     * 4、查询分享的文件列表
+     * 5、查询分享者的信息
+     *
+     * @param context
+     * @return
+     */
+    @Override
+    public ShareDetailVO detail(QueryShareDetailContext context) {
+        RPanShare record = checkShareStatus(context.getShareId());
+        context.setRecord(record);
+        initShareVo(context);
+        assembleMainShareInfo(context);
+        assembleShareFilesInfo(context);
+        assembleShareUserInfo(context);
+        return context.getVo();
+    }
+
+    /**
+     * 查询分享者的信息
+     * @param context
+     */
+    private void assembleShareUserInfo(QueryShareDetailContext context) {
+        RPanUser record = userService.getById(context.getRecord().getCreateUser());
+        if(Objects.isNull(record)){
+            throw new RPanBusinessException("用户信息查询失败");
+        }
+        ShareUserInfoVO shareUserInfoVO=new ShareUserInfoVO();
+        shareUserInfoVO.setUsername(encryptUsername(record.getUsername()));
+        shareUserInfoVO.setUserId(record.getUserId());
+        context.getVo().setShareUserInfoVO(shareUserInfoVO);
+
+    }
+
+    /**
+     * 加密用户名称
+     * @param username
+     * @return
+     */
+    private String encryptUsername(String username) {
+        StringBuffer stringBuffer =new StringBuffer(username);
+        stringBuffer.replace(RPanConstants.TWO_INT, username.length()-RPanConstants.TWO_INT, RPanConstants.COMMON_ENCRYPT_STR);
+        return stringBuffer.toString();
+    }
+
+    /**
+     * 查询文件对应的分享列表
+     * 1、查询分享的对应ID集合
+     * 2、根据文件ID来查询文件列表信息
+     *
+     * @param context
+     */
+    private void assembleShareFilesInfo(QueryShareDetailContext context) {
+        LambdaQueryWrapper<RPanShareFile> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.select(RPanShareFile::getFileId);
+        queryWrapper.eq(RPanShareFile::getShareId, context.getShareId());
+        List<Long> fileIdList = shareFileService.listObjs(queryWrapper, value -> (Long) value);
+        QueryFileContext queryFileContext = new QueryFileContext();
+        queryFileContext.setUserId(context.getRecord().getCreateUser());
+        queryFileContext.setDelFlag(DelFlagEnum.NO.getCode());
+        queryFileContext.setFileIdList(fileIdList);
+        List<RPanUserFileVO> rPanUserFileVOList = userFileService.getFileList(queryFileContext);
+        context.getVo().setRPanUserFileVOList(rPanUserFileVOList);
+    }
+
+    /**
+     * 查询分享的主体信息
+     *
+     * @param context
+     */
+    private void assembleMainShareInfo(QueryShareDetailContext context) {
+        RPanShare record = context.getRecord();
+        ShareDetailVO vo = context.getVo();
+        vo.setShareId(record.getShareId());
+        vo.setShareName(record.getShareName());
+        vo.setCreateTime(record.getCreateTime());
+        vo.setShareDay(record.getShareDay());
+        vo.setShareEndTime(record.getShareEndTime());
+    }
+
+    /**
+     * 初始化文件详情的VO实体
+     *
+     * @param context
+     */
+    private void initShareVo(QueryShareDetailContext context) {
+        ShareDetailVO vo = new ShareDetailVO();
+        context.setVo(vo);
     }
 
     /**
      * 生成一个短期的分享token
+     *
      * @param context
      */
     private String generateShareToken(CheckShareCodeContext context) {
@@ -114,80 +225,85 @@ public class ShareServiceImpl extends ServiceImpl<RPanShareMapper, RPanShare>
 
     /**
      * 校验分享码是否正确
+     *
      * @param context
      */
     private void doCheckShareCode(CheckShareCodeContext context) {
         RPanShare record = context.getRecord();
-        if(!Objects.equals(context.getShareCode(),record.getShareCode())){
+        if (!Objects.equals(context.getShareCode(), record.getShareCode())) {
             throw new RPanBusinessException("分享码错误");
         }
     }
 
     /**
      * 检查分享的状态是否正常
+     *
      * @param context
      */
-    private void checkShareStatus(CheckShareCodeContext context) {
-        Long shareId = context.getShareId();
+    private RPanShare checkShareStatus(Long shareId) {
         RPanShare record = this.getById(shareId);
-        if(ObjectUtil.isNull(record)){
+        if (ObjectUtil.isNull(record)) {
             throw new RPanBusinessException(ResponseCode.SHARE_CANCELLED);
         }
-        if(Objects.equals(ShareStatusEnum.FILE_DELETED.getCode(),record.getShareStatus())){
+        if (Objects.equals(ShareStatusEnum.FILE_DELETED.getCode(), record.getShareStatus())) {
             throw new RPanBusinessException(ResponseCode.SHARE_FILE_MISS);
         }
-        if(!Objects.equals(ShareDayTypeEnum.PERMANENT_VALIDITY.getCode(),record.getShareDayType())){
-           if(record.getShareEndTime().before(new Date())){
-               throw new RPanBusinessException(ResponseCode.SHARE_EXPIRE);
-           }
+        if (!Objects.equals(ShareDayTypeEnum.PERMANENT_VALIDITY.getCode(), record.getShareDayType())) {
+            if (record.getShareEndTime().before(new Date())) {
+                throw new RPanBusinessException(ResponseCode.SHARE_EXPIRE);
+            }
         }
-        context.setRecord(record);
+        return record;
     }
 
     /**
      * 取消文件和分享的关联关系数据
+     *
      * @param context
      */
     private void doCancelShareFiles(CancelShareUrlContext context) {
         LambdaQueryWrapper<RPanShareFile> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.in(RPanShareFile::getShareId,context.getShareIdList());
-        queryWrapper.eq(RPanShareFile::getCreateUser,context.getUserId());
-        if(!shareFileService.remove(queryWrapper)){
+        queryWrapper.in(RPanShareFile::getShareId, context.getShareIdList());
+        queryWrapper.eq(RPanShareFile::getCreateUser, context.getUserId());
+        if (!shareFileService.remove(queryWrapper)) {
             throw new RPanBusinessException("取消文件分享失败");
         }
     }
 
     /**
      * 取消文件分享的动作
+     *
      * @param context
      */
     private void doCancelShare(CancelShareUrlContext context) {
         List<Long> shareIdList = context.getShareIdList();
-        if(!removeByIds(shareIdList)){
+        if (!removeByIds(shareIdList)) {
             throw new RPanBusinessException("取消分享失败");
         }
     }
 
     /**
      * 检查用户是否拥有取消对应分享链接的权限
+     *
      * @param context
      */
     private void checkUserCancelSharePermission(CancelShareUrlContext context) {
         List<Long> shareIdList = context.getShareIdList();
         Long userId = context.getUserId();
         List<RPanShare> records = listByIds(shareIdList);
-        if(CollectionUtil.isEmpty( records)){
+        if (CollectionUtil.isEmpty(records)) {
             throw new RPanBusinessException("您无权限取消分享的动作");
         }
-       records.forEach(record->{
-           if(!Objects.equals(record.getCreateUser(),userId)){
-               throw new RPanBusinessException("您无权限取消分享的动作");
-           }
-       });
+        records.forEach(record -> {
+            if (!Objects.equals(record.getCreateUser(), userId)) {
+                throw new RPanBusinessException("您无权限取消分享的动作");
+            }
+        });
     }
 
     /**
      * 拼装对应的返回VO
+     *
      * @param context
      * @return
      */
@@ -204,6 +320,7 @@ public class ShareServiceImpl extends ServiceImpl<RPanShareMapper, RPanShare>
 
     /**
      * 保存分享和分享文件的关联关系
+     *
      * @param context
      */
     private void saveShareFiles(CreateShareUrlContext context) {
@@ -236,7 +353,7 @@ public class ShareServiceImpl extends ServiceImpl<RPanShareMapper, RPanShare>
         record.setShareStatus(ShareStatusEnum.NORMAL.getCode());
         record.setCreateUser(context.getUserId());
         record.setCreateTime(new Date());
-        if(!this.save(record)){
+        if (!this.save(record)) {
             throw new RPanBusinessException("保存分享信息失败");
         }
         context.setRecord(record);
@@ -244,6 +361,7 @@ public class ShareServiceImpl extends ServiceImpl<RPanShareMapper, RPanShare>
 
     /**
      * 创建分享的分享码
+     *
      * @return
      */
     private String createShareCode() {

@@ -14,15 +14,13 @@ import xyz.xlls.rpan.core.exception.RPanBusinessException;
 import xyz.xlls.rpan.server.RPanServerLauncher;
 import xyz.xlls.rpan.server.modules.file.context.CreateFolderContext;
 import xyz.xlls.rpan.server.modules.file.service.IUserFileService;
-import xyz.xlls.rpan.server.modules.share.context.CancelShareUrlContext;
-import xyz.xlls.rpan.server.modules.share.context.CheckShareCodeContext;
-import xyz.xlls.rpan.server.modules.share.context.CreateShareUrlContext;
-import xyz.xlls.rpan.server.modules.share.context.QueryShareUrlListContext;
+import xyz.xlls.rpan.server.modules.share.context.*;
 import xyz.xlls.rpan.server.modules.share.enums.ShareDayTypeEnum;
 import xyz.xlls.rpan.server.modules.share.enums.ShareTypeEnum;
 import xyz.xlls.rpan.server.modules.share.service.IShareService;
 import xyz.xlls.rpan.server.modules.share.vo.RPanShareUrlListVO;
 import xyz.xlls.rpan.server.modules.share.vo.RPanShareUrlVO;
+import xyz.xlls.rpan.server.modules.share.vo.ShareDetailVO;
 import xyz.xlls.rpan.server.modules.user.context.UserLoginContext;
 import xyz.xlls.rpan.server.modules.user.context.UserRegisterContext;
 import xyz.xlls.rpan.server.modules.user.service.IUserService;
@@ -182,6 +180,40 @@ public class ShareTest {
         checkShareCodeContext.setShareId(vo.getShareId());
         checkShareCodeContext.setShareCode("aaaa");
         String token = shareService.checkShareCode(checkShareCodeContext);
+    }
+    /**
+     * 查看分享详情成功
+     */
+    @Test
+    public void testQueryShareDetailSuccess(){
+        Long userId = register();
+        UserInfoVO info = info(userId);
+        //创建一个文件夹
+        CreateFolderContext context=new CreateFolderContext();
+        context.setParentId(info.getRootFileId());
+        context.setUserId(userId);
+        context.setFolderName("test");
+        Long fileId = userFileService.createFolder(context);
+        Assert.notNull(fileId);
+        CreateShareUrlContext createShareUrlContext=new CreateShareUrlContext();
+        createShareUrlContext.setShareName("test");
+        createShareUrlContext.setShareType(ShareTypeEnum.NEED_SHARE_CODE.getCode());
+        createShareUrlContext.setShareDayType(ShareDayTypeEnum.SEVEN_DAYS_VALIDITY.getCode());
+        createShareUrlContext.setShareFileIdList(Lists.newArrayList(fileId));
+        createShareUrlContext.setUserId(userId);
+        RPanShareUrlVO vo = shareService.create(createShareUrlContext);
+        Assert.notNull(vo);
+        //校验分享码正确
+        CheckShareCodeContext checkShareCodeContext = new CheckShareCodeContext();
+        checkShareCodeContext.setShareId(vo.getShareId());
+        checkShareCodeContext.setShareCode(vo.getShareCode());
+        String token = shareService.checkShareCode(checkShareCodeContext);
+        Assert.notBlank(token);
+        //查询分享详情
+        QueryShareDetailContext queryShareDetailContext = new QueryShareDetailContext();
+        queryShareDetailContext.setShareId(vo.getShareId());
+        ShareDetailVO detailVO = shareService.detail(queryShareDetailContext);
+        Assert.notNull(detailVO);
     }
     /**
      * 用户注册
