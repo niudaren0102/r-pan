@@ -20,6 +20,7 @@ import xyz.xlls.rpan.server.modules.share.context.*;
 import xyz.xlls.rpan.server.modules.share.po.CancelShareUrlPO;
 import xyz.xlls.rpan.server.modules.share.po.CheckShareCodePO;
 import xyz.xlls.rpan.server.modules.share.po.CreateShareUrlPO;
+import xyz.xlls.rpan.server.modules.share.po.ShareSavePO;
 import xyz.xlls.rpan.server.modules.share.service.IShareService;
 import xyz.xlls.rpan.server.modules.share.vo.RPanShareUrlVO;
 import xyz.xlls.rpan.server.modules.share.vo.RPanShareUrlListVO;
@@ -135,5 +136,24 @@ public class ShareController {
         context.setParentId(IdUtil.decrypt(parentId));
         List<RPanUserFileVO> result= shareService.fileList(context);
         return R.data(result);
+    }
+    @ApiOperation(
+            value = "保存至我的网盘",
+            notes = "该接口提供了保存至我的网盘的功能",
+            consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE,
+            produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+    @NeedShareCode
+    @PostMapping("share/save")
+    public R saveFiles(@Validated @RequestBody ShareSavePO shareSavePO){
+        ShareSaveContext context = new ShareSaveContext();
+        String fileIds = shareSavePO.getFileIds();
+        List<Long> fileIdList = Splitter.on(RPanConstants.COMMON_SEPARATOR).splitToList(fileIds)
+                .stream().map(IdUtil::decrypt).collect(Collectors.toList());
+        context.setFileIdList(fileIdList);
+        context.setTargetParentId(IdUtil.decrypt(shareSavePO.getTargetParentId()));
+        context.setShareId(ShareIdUtil.get());
+        context.setUserId(UserIdUtil.get());
+        shareService.saveFiles(context);
+        return R.success();
     }
 }

@@ -16,6 +16,7 @@ import xyz.xlls.rpan.core.utils.IdUtil;
 import xyz.xlls.rpan.core.utils.JwtUtil;
 import xyz.xlls.rpan.core.utils.UUIDUtil;
 import xyz.xlls.rpan.server.common.config.PanServerConfig;
+import xyz.xlls.rpan.server.modules.file.context.CopyFileContext;
 import xyz.xlls.rpan.server.modules.file.context.QueryFileContext;
 import xyz.xlls.rpan.server.modules.file.entity.RPanUserFile;
 import xyz.xlls.rpan.server.modules.file.enums.DelFlagEnum;
@@ -178,12 +179,47 @@ public class ShareServiceImpl extends ServiceImpl<RPanShareMapper, RPanShare>
     }
 
     /**
+     * 转存至我的网盘
+     * 1、校验分享状态
+     * 2、校验文件ID是否合法
+     * 3、委托文件模块做文件拷贝的操作
+     * @param context
+     */
+    @Override
+    public void saveFiles(ShareSaveContext context) {
+        checkShareStatus(context.getShareId());
+        checkFileIdIsOnShareStatus(context.getShareId(),context.getFileIdList());
+        doSaveFiles(context);
+    }
+
+    /**
+     * 执行保存我的网盘动作
+     * @param context
+     */
+    private void doSaveFiles(ShareSaveContext context) {
+        CopyFileContext copyFileContext = new CopyFileContext();
+        copyFileContext.setFileIdList(context.getFileIdList());
+        copyFileContext.setUserId(context.getUserId());
+        copyFileContext.setTargetParentId(context.getTargetParentId());
+        userFileService.copy(copyFileContext);
+    }
+
+    /**
+     * 校验文件ID是否属于某一个分享
+     * @param shareId
+     * @param fileIdList
+     */
+    private void checkFileIdIsOnShareStatus(Long shareId, List<Long> fileIdList) {
+        checkFileIdIsOnShareStatusAndGetAllShareUserFiles(shareId, fileIdList);
+    }
+
+    /**
      * 检验文件是否处于分享状态，返回该分享的所有文件列表
      * @param shareId
      * @param fileIdList
      * @return
      */
-    private List<RPanUserFileVO> checkFileIdIsOnShareStatusAndGetAllShareUserFiles(Long shareId, ArrayList<Long> fileIdList) {
+    private List<RPanUserFileVO> checkFileIdIsOnShareStatusAndGetAllShareUserFiles(Long shareId, List<Long> fileIdList) {
         List<Long> shareFileIdList = getShareFileIdList(shareId);
         if (CollectionUtil.isEmpty(shareFileIdList)) {
             return Lists.newArrayList();
