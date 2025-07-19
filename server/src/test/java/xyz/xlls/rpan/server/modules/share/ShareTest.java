@@ -21,6 +21,7 @@ import xyz.xlls.rpan.server.modules.share.service.IShareService;
 import xyz.xlls.rpan.server.modules.share.vo.RPanShareUrlListVO;
 import xyz.xlls.rpan.server.modules.share.vo.RPanShareUrlVO;
 import xyz.xlls.rpan.server.modules.share.vo.ShareDetailVO;
+import xyz.xlls.rpan.server.modules.share.vo.ShareSimpleDetailVO;
 import xyz.xlls.rpan.server.modules.user.context.UserLoginContext;
 import xyz.xlls.rpan.server.modules.user.context.UserRegisterContext;
 import xyz.xlls.rpan.server.modules.user.service.IUserService;
@@ -213,6 +214,34 @@ public class ShareTest {
         QueryShareDetailContext queryShareDetailContext = new QueryShareDetailContext();
         queryShareDetailContext.setShareId(vo.getShareId());
         ShareDetailVO detailVO = shareService.detail(queryShareDetailContext);
+        Assert.notNull(detailVO);
+    }
+    /**
+     * 查看分享简单详情成功
+     */
+    @Test
+    public void testQueryShareSimpleDetailSuccess(){
+        Long userId = register();
+        UserInfoVO info = info(userId);
+        //创建一个文件夹
+        CreateFolderContext context=new CreateFolderContext();
+        context.setParentId(info.getRootFileId());
+        context.setUserId(userId);
+        context.setFolderName("test");
+        Long fileId = userFileService.createFolder(context);
+        Assert.notNull(fileId);
+        CreateShareUrlContext createShareUrlContext=new CreateShareUrlContext();
+        createShareUrlContext.setShareName("test");
+        createShareUrlContext.setShareType(ShareTypeEnum.NEED_SHARE_CODE.getCode());
+        createShareUrlContext.setShareDayType(ShareDayTypeEnum.SEVEN_DAYS_VALIDITY.getCode());
+        createShareUrlContext.setShareFileIdList(Lists.newArrayList(fileId));
+        createShareUrlContext.setUserId(userId);
+        RPanShareUrlVO vo = shareService.create(createShareUrlContext);
+        Assert.notNull(vo);
+        //查询分享详情
+        QueryShareSimpleDetailContext queryShareSimpleDetailContext = new QueryShareSimpleDetailContext();
+        queryShareSimpleDetailContext.setShareId(vo.getShareId());
+        ShareSimpleDetailVO detailVO = shareService.simpleDetail(queryShareSimpleDetailContext);
         Assert.notNull(detailVO);
     }
     /**

@@ -29,10 +29,7 @@ import xyz.xlls.rpan.server.modules.share.service.IShareFileService;
 import xyz.xlls.rpan.server.modules.share.service.IShareService;
 import xyz.xlls.rpan.server.modules.share.mapper.RPanShareMapper;
 import org.springframework.stereotype.Service;
-import xyz.xlls.rpan.server.modules.share.vo.RPanShareUrlListVO;
-import xyz.xlls.rpan.server.modules.share.vo.RPanShareUrlVO;
-import xyz.xlls.rpan.server.modules.share.vo.ShareDetailVO;
-import xyz.xlls.rpan.server.modules.share.vo.ShareUserInfoVO;
+import xyz.xlls.rpan.server.modules.share.vo.*;
 import xyz.xlls.rpan.server.modules.user.entity.RPanUser;
 import xyz.xlls.rpan.server.modules.user.service.IUserService;
 
@@ -138,6 +135,59 @@ public class ShareServiceImpl extends ServiceImpl<RPanShareMapper, RPanShare>
         assembleShareFilesInfo(context);
         assembleShareUserInfo(context);
         return context.getVo();
+    }
+
+    /**
+     * 1、校验分享的状态
+     * 2、初始化分享实体
+     * 3、查询分享的主体信息
+     * 4、查询分享者信息
+     * @param context
+     * @return
+     */
+    @Override
+    public ShareSimpleDetailVO simpleDetail(QueryShareSimpleDetailContext context) {
+        RPanShare record = checkShareStatus(context.getShareId());
+        context.setRecord(record);
+        initShareSimpleVo(context);
+        assembleMainShareSimpleInfo(context);
+        assembleShareSimpleUserInfo(context);
+        return context.getVo();
+    }
+
+    /**
+     * 拼装简单文件分享详情的用户信息
+     * @param context
+     */
+    private void assembleShareSimpleUserInfo(QueryShareSimpleDetailContext context) {
+        RPanUser record = userService.getById(context.getRecord().getCreateUser());
+        if(Objects.isNull(record)){
+            throw new RPanBusinessException("用户信息查询失败");
+        }
+        ShareUserInfoVO shareUserInfoVO=new ShareUserInfoVO();
+        shareUserInfoVO.setUsername(encryptUsername(record.getUsername()));
+        shareUserInfoVO.setUserId(record.getUserId());
+        context.getVo().setShareUserInfoVO(shareUserInfoVO);
+    }
+
+    /**
+     * 填充简单分享详情实体信息
+     * @param context
+     */
+    private void assembleMainShareSimpleInfo(QueryShareSimpleDetailContext context) {
+        RPanShare record = context.getRecord();
+        ShareSimpleDetailVO vo = context.getVo();
+        vo.setShareId(record.getShareId());
+        vo.setShareName(record.getShareName());
+    }
+
+    /**
+     * 初始化简单分享详情的VO对象
+     * @param context
+     */
+    private void initShareSimpleVo(QueryShareSimpleDetailContext context) {
+        ShareSimpleDetailVO vo = new ShareSimpleDetailVO();
+        context.setVo(vo);
     }
 
     /**

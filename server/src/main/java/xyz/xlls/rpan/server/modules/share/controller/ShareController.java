@@ -23,7 +23,9 @@ import xyz.xlls.rpan.server.modules.share.service.IShareService;
 import xyz.xlls.rpan.server.modules.share.vo.RPanShareUrlVO;
 import xyz.xlls.rpan.server.modules.share.vo.RPanShareUrlListVO;
 import xyz.xlls.rpan.server.modules.share.vo.ShareDetailVO;
+import xyz.xlls.rpan.server.modules.share.vo.ShareSimpleDetailVO;
 
+import javax.validation.constraints.NotBlank;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -98,6 +100,21 @@ public class ShareController {
         QueryShareDetailContext context = new QueryShareDetailContext();
         context.setShareId(ShareIdUtil.get());
         ShareDetailVO vo=shareService.detail(context);
+        return R.data( vo);
+    }
+    @ApiOperation(
+            value = "查询文件分享的简单详情",
+            notes = "该接口提供了查询文件分享简单详情的功能",
+            consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE,
+            produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+    @LoginIgnore
+    @GetMapping("share/simple")
+    public R<ShareSimpleDetailVO> simpleDetail(
+            @NotBlank(message="分享的ID不能为空") @RequestParam(value = "shareId",required = false) String shareId
+    ){
+        QueryShareSimpleDetailContext context = new QueryShareSimpleDetailContext();
+        context.setShareId(IdUtil.decrypt(shareId));
+        ShareSimpleDetailVO vo=shareService.simpleDetail(context);
         return R.data( vo);
     }
 }

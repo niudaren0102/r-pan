@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import xyz.xlls.rpan.server.modules.share.vo.RPanShareUrlListVO;
 import xyz.xlls.rpan.server.modules.share.vo.RPanShareUrlVO;
 import xyz.xlls.rpan.server.modules.share.vo.ShareDetailVO;
+import xyz.xlls.rpan.server.modules.share.vo.ShareSimpleDetailVO;
 
 import java.util.List;
 
@@ -48,4 +49,11 @@ public interface IShareService extends IService<RPanShare> {
      * @return
      */
     ShareDetailVO detail(QueryShareDetailContext context);
+
+    /**
+     * 查询分享的简单详情
+     * @param context
+     * @return
+     */
+    ShareSimpleDetailVO simpleDetail(QueryShareSimpleDetailContext context);
 }
