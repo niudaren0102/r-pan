@@ -14,6 +14,7 @@ import xyz.xlls.rpan.core.exception.RPanBusinessException;
 import xyz.xlls.rpan.server.RPanServerLauncher;
 import xyz.xlls.rpan.server.modules.file.context.CreateFolderContext;
 import xyz.xlls.rpan.server.modules.file.service.IUserFileService;
+import xyz.xlls.rpan.server.modules.file.vo.RPanUserFileVO;
 import xyz.xlls.rpan.server.modules.share.context.*;
 import xyz.xlls.rpan.server.modules.share.enums.ShareDayTypeEnum;
 import xyz.xlls.rpan.server.modules.share.enums.ShareTypeEnum;
@@ -243,6 +244,41 @@ public class ShareTest {
         queryShareSimpleDetailContext.setShareId(vo.getShareId());
         ShareSimpleDetailVO detailVO = shareService.simpleDetail(queryShareSimpleDetailContext);
         Assert.notNull(detailVO);
+    }
+    /**
+     * 查询文件分享下一级列表成功
+     */
+    @Test
+    public void testQueryShareFileListSuccess(){
+        Long userId = register();
+        UserInfoVO info = info(userId);
+        //创建一个文件夹
+        CreateFolderContext context=new CreateFolderContext();
+        context.setParentId(info.getRootFileId());
+        context.setUserId(userId);
+        context.setFolderName("test");
+        Long fileId = userFileService.createFolder(context);
+        Assert.notNull(fileId);
+        CreateShareUrlContext createShareUrlContext=new CreateShareUrlContext();
+        createShareUrlContext.setShareName("test");
+        createShareUrlContext.setShareType(ShareTypeEnum.NEED_SHARE_CODE.getCode());
+        createShareUrlContext.setShareDayType(ShareDayTypeEnum.SEVEN_DAYS_VALIDITY.getCode());
+        createShareUrlContext.setShareFileIdList(Lists.newArrayList(info.getRootFileId()));
+        createShareUrlContext.setUserId(userId);
+        RPanShareUrlVO vo = shareService.create(createShareUrlContext);
+        Assert.notNull(vo);
+        //校验分享码正确
+        CheckShareCodeContext checkShareCodeContext = new CheckShareCodeContext();
+        checkShareCodeContext.setShareId(vo.getShareId());
+        checkShareCodeContext.setShareCode(vo.getShareCode());
+        String token = shareService.checkShareCode(checkShareCodeContext);
+        Assert.notBlank(token);
+        //查询分享详情
+        QueryChildFileListContext queryChildFileListContext = new QueryChildFileListContext();
+        queryChildFileListContext.setShareId(vo.getShareId());
+        queryChildFileListContext.setParentId(fileId);
+        List<RPanUserFileVO> rPanUserFileVOS = shareService.fileList(queryChildFileListContext);
+        Assert.notNull(rPanUserFileVOS);
     }
     /**
      * 用户注册

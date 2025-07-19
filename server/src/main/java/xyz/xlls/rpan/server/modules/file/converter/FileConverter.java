@@ -7,6 +7,7 @@ import xyz.xlls.rpan.server.modules.file.context.*;
 import xyz.xlls.rpan.server.modules.file.entity.RPanUserFile;
 import xyz.xlls.rpan.server.modules.file.po.*;
 import xyz.xlls.rpan.server.modules.file.vo.FolderTreeNodeVO;
+import xyz.xlls.rpan.server.modules.file.vo.RPanUserFileVO;
 import xyz.xlls.rpan.storage.engine.core.context.StoreFileChunkContext;
 
 /**
@@ -49,4 +50,5 @@ public interface FileConverter {
     @Mapping(target = "id",source = "record.fileId")
     @Mapping(target = "children",expression = "java(org.assertj.core.util.Lists.newArrayList())")
     FolderTreeNodeVO rPanUserFile2FolderTreeNodeVO(RPanUserFile record);
+    RPanUserFileVO rPanUserFile2RPanUserFileVO(RPanUserFile record);
 }

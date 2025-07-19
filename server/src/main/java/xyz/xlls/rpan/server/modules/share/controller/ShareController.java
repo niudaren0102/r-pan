@@ -14,6 +14,7 @@ import xyz.xlls.rpan.server.common.annotation.LoginIgnore;
 import xyz.xlls.rpan.server.common.annotation.NeedShareCode;
 import xyz.xlls.rpan.server.common.utils.ShareIdUtil;
 import xyz.xlls.rpan.server.common.utils.UserIdUtil;
+import xyz.xlls.rpan.server.modules.file.vo.RPanUserFileVO;
 import xyz.xlls.rpan.server.modules.share.Converter.ShareConverter;
 import xyz.xlls.rpan.server.modules.share.context.*;
 import xyz.xlls.rpan.server.modules.share.po.CancelShareUrlPO;
@@ -31,6 +32,7 @@ import java.util.stream.Collectors;
 
 @Api(tags = "分享模块")
 @RestController
+@Validated
 public class ShareController {
     @Autowired
     private IShareService shareService;
@@ -116,5 +118,22 @@ public class ShareController {
         context.setShareId(IdUtil.decrypt(shareId));
         ShareSimpleDetailVO vo=shareService.simpleDetail(context);
         return R.data( vo);
+    }
+    @ApiOperation(
+            value = "获取下一级文件列表",
+            notes = "该接口提供了获取下一级文件列表的功能",
+            consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE,
+            produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+    @GetMapping("share/file/list")
+    @NeedShareCode
+    @LoginIgnore
+    public R<List<RPanUserFileVO>> fileList(
+            @NotBlank(message="文件父ID不能为空") @RequestParam(value = "parentId",required = false) String parentId
+    ){
+        QueryChildFileListContext context = new QueryChildFileListContext();
+        context.setShareId(ShareIdUtil.get());
+        context.setParentId(IdUtil.decrypt(parentId));
+        List<RPanUserFileVO> result= shareService.fileList(context);
+        return R.data(result);
     }
 }

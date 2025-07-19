@@ -6,6 +6,7 @@ import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.RandomUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import org.assertj.core.util.Lists;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
 import xyz.xlls.rpan.core.constants.RPanConstants;
@@ -16,6 +17,7 @@ import xyz.xlls.rpan.core.utils.JwtUtil;
 import xyz.xlls.rpan.core.utils.UUIDUtil;
 import xyz.xlls.rpan.server.common.config.PanServerConfig;
 import xyz.xlls.rpan.server.modules.file.context.QueryFileContext;
+import xyz.xlls.rpan.server.modules.file.entity.RPanUserFile;
 import xyz.xlls.rpan.server.modules.file.enums.DelFlagEnum;
 import xyz.xlls.rpan.server.modules.file.service.IUserFileService;
 import xyz.xlls.rpan.server.modules.file.vo.RPanUserFileVO;
@@ -33,9 +35,8 @@ import xyz.xlls.rpan.server.modules.share.vo.*;
 import xyz.xlls.rpan.server.modules.user.entity.RPanUser;
 import xyz.xlls.rpan.server.modules.user.service.IUserService;
 
-import java.util.Date;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * @author Administrator
@@ -156,6 +157,53 @@ public class ShareServiceImpl extends ServiceImpl<RPanShareMapper, RPanShare>
     }
 
     /**
+     * 获取下一级文件列表
+     * 1、校验分享状态
+     * 2、校验文件的ID是在分享的文件列表中
+     * 3、查询对应的子文件列表，返回
+     * @param context
+     * @return
+     */
+    @Override
+    public List<RPanUserFileVO> fileList(QueryChildFileListContext context) {
+        RPanShare record = checkShareStatus(context.getShareId());
+        context.setRecord(record);
+        List<RPanUserFileVO> allUserFileRecords= checkFileIdIsOnShareStatusAndGetAllShareUserFiles(context.getShareId(),Lists.newArrayList(context.getParentId()));
+        Map<Long, List<RPanUserFileVO>> parentIdFileListMap = allUserFileRecords.stream().collect(Collectors.groupingBy(RPanUserFileVO::getParentId));
+        List<RPanUserFileVO> rPanUserFileVOS = parentIdFileListMap.get(context.getParentId());
+        if(CollectionUtil.isEmpty(rPanUserFileVOS)){
+            return Lists.newArrayList();
+        }
+        return allUserFileRecords;
+    }
+
+    /**
+     * 检验文件是否处于分享状态，返回该分享的所有文件列表
+     * @param shareId
+     * @param fileIdList
+     * @return
+     */
+    private List<RPanUserFileVO> checkFileIdIsOnShareStatusAndGetAllShareUserFiles(Long shareId, ArrayList<Long> fileIdList) {
+        List<Long> shareFileIdList = getShareFileIdList(shareId);
+        if (CollectionUtil.isEmpty(shareFileIdList)) {
+            return Lists.newArrayList();
+        }
+        List<RPanUserFile> allFileRecords = userFileService.findAllFileRecordsByFileIdList(fileIdList);
+        if (CollectionUtil.isEmpty(allFileRecords)) {
+            return Lists.newArrayList();
+        }
+        List<RPanUserFile> allFileRecordsNoDel = allFileRecords.stream().filter(Objects::nonNull)
+                .filter(record -> ObjectUtil.equal(record.getDelFlag(), DelFlagEnum.NO.getCode()))
+                .collect(Collectors.toList());
+        List<Long> allFileIdList = allFileRecordsNoDel.stream().map(RPanUserFile::getFileId).collect(Collectors.toList());
+        if(allFileIdList.containsAll(fileIdList)){
+             return userFileService.transferVoList(allFileRecordsNoDel);
+        }
+        throw new RPanBusinessException(ResponseCode.SHARE_FILE_MISS);
+    }
+
+
+    /**
      * 拼装简单文件分享详情的用户信息
      * @param context
      */
@@ -225,10 +273,7 @@ public class ShareServiceImpl extends ServiceImpl<RPanShareMapper, RPanShare>
      * @param context
      */
     private void assembleShareFilesInfo(QueryShareDetailContext context) {
-        LambdaQueryWrapper<RPanShareFile> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.select(RPanShareFile::getFileId);
-        queryWrapper.eq(RPanShareFile::getShareId, context.getShareId());
-        List<Long> fileIdList = shareFileService.listObjs(queryWrapper, value -> (Long) value);
+        List<Long> fileIdList = getShareFileIdList(context.getShareId());
         QueryFileContext queryFileContext = new QueryFileContext();
         queryFileContext.setUserId(context.getRecord().getCreateUser());
         queryFileContext.setDelFlag(DelFlagEnum.NO.getCode());
@@ -237,6 +282,21 @@ public class ShareServiceImpl extends ServiceImpl<RPanShareMapper, RPanShare>
         context.getVo().setRPanUserFileVOList(rPanUserFileVOList);
     }
 
+    /**
+     * 查询分享对应的文件ID集合
+     * @param shareId
+     * @return
+     */
+    private List<Long> getShareFileIdList(Long shareId){
+        if(Objects.isNull(shareId)){
+            return Lists.newArrayList();
+        }
+        LambdaQueryWrapper<RPanShareFile> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.select(RPanShareFile::getFileId);
+        queryWrapper.eq(RPanShareFile::getShareId, shareId);
+        List<Long> fileIdList = shareFileService.listObjs(queryWrapper, value -> (Long) value);
+        return fileIdList;
+    }
     /**
      * 查询分享的主体信息
      *

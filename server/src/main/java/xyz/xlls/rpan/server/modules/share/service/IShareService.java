@@ -1,5 +1,6 @@
 package xyz.xlls.rpan.server.modules.share.service;
 
+import xyz.xlls.rpan.server.modules.file.vo.RPanUserFileVO;
 import xyz.xlls.rpan.server.modules.share.context.*;
 import xyz.xlls.rpan.server.modules.share.entity.RPanShare;
 import com.baomidou.mybatisplus.extension.service.IService;
@@ -56,4 +57,11 @@ public interface IShareService extends IService<RPanShare> {
      * @return
      */
     ShareSimpleDetailVO simpleDetail(QueryShareSimpleDetailContext context);
+
+    /**
+     * 获取下一级文件列表
+     * @param context
+     * @return
+     */
+    List<RPanUserFileVO> fileList(QueryChildFileListContext context);
 }
