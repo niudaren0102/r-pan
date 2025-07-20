@@ -84,6 +84,11 @@ public interface IUserFileService extends IService<RPanUserFile> {
      * @param context
      */
     void download(FileDownloadContext context);
+    /**
+     * 文件下载 不校验用户是否是上传用户
+     * @param context
+     */
+    void downloadWithoutCheckUser(FileDownloadContext context);
 
     /**
      * 文件预览

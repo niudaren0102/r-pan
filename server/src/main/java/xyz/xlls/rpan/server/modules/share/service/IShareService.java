@@ -70,4 +70,10 @@ public interface IShareService extends IService<RPanShare> {
      * @param context
      */
     void saveFiles(ShareSaveContext context);
+
+    /**
+     * 分享的文件下载
+     * @param context
+     */
+    void download(ShareFileDownloadContext context);
 }
