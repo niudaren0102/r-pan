@@ -76,4 +76,10 @@ public interface IShareService extends IService<RPanShare> {
      * @param context
      */
     void download(ShareFileDownloadContext context);
+
+    /**
+     * 刷新受影响的对应的分享状态
+     * @param allAvailableFileIdList
+     */
+    void refreshStatus(List<Long> allAvailableFileIdList);
 }
