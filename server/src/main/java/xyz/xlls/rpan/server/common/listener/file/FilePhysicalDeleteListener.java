@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.event.EventListener;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import xyz.xlls.rpan.core.constants.RPanConstants;
 import xyz.xlls.rpan.server.common.event.file.FilePhysicalDeleteEvent;
@@ -46,6 +47,7 @@ public class FilePhysicalDeleteListener implements ApplicationContextAware {
      * @param event
      */
     @EventListener(classes = FilePhysicalDeleteEvent.class)
+    @Async("eventListenerTaskExecutor")
     public void physicalDeleteFile(FilePhysicalDeleteEvent event){
         List<RPanUserFile> allRecords = event.getAllRecords();
         if(ObjectUtil.isNotEmpty(allRecords)){

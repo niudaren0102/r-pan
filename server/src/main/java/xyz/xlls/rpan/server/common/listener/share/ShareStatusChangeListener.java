@@ -4,6 +4,7 @@ import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.util.ObjectUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.event.EventListener;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import xyz.xlls.rpan.server.common.event.file.DeleteFileEvent;
 import xyz.xlls.rpan.server.common.event.file.FileRestoreEvent;
@@ -29,6 +30,7 @@ public class ShareStatusChangeListener {
      * @param event
      */
     @EventListener(DeleteFileEvent.class)
+    @Async("eventListenerTaskExecutor")
     public void changeShare2FileDeleted(DeleteFileEvent event){
         List<Long> fileIdList = event.getFileIdList();
         if(CollectionUtil.isEmpty(fileIdList)){
@@ -47,6 +49,7 @@ public class ShareStatusChangeListener {
      * @param event
      */
     @EventListener(FileRestoreEvent.class)
+    @Async("eventListenerTaskExecutor")
     public void changeShare2Normal(FileRestoreEvent event){
         List<Long> fileIdList = event.getFileIdList();
         if(CollectionUtil.isEmpty(fileIdList)){

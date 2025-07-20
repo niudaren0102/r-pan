@@ -2,6 +2,7 @@ package xyz.xlls.rpan.server.common.listener.log;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.event.EventListener;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import xyz.xlls.rpan.core.utils.IdUtil;
 import xyz.xlls.rpan.server.common.event.log.ErrorLogEvent;
@@ -22,7 +23,8 @@ public class ErrorLogEventListener {
      * @param event
      */
     @EventListener(ErrorLogEvent.class)
-    private void saveErrorLog(ErrorLogEvent event){
+    @Async("eventListenerTaskExecutor")
+    public void saveErrorLog(ErrorLogEvent event){
         RPanErrorLog record=new RPanErrorLog();
         record.setId(IdUtil.get());
         record.setLogContent(event.getMessage());

@@ -3,6 +3,7 @@ package xyz.xlls.rpan.server.common.listener.search;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.event.EventListener;
 import org.springframework.dao.DuplicateKeyException;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import xyz.xlls.rpan.core.utils.IdUtil;
 import xyz.xlls.rpan.server.common.event.search.UserSearchEvent;
@@ -23,6 +24,7 @@ public class UserSearchEventListener {
      * @param event
      */
     @EventListener(classes = UserSearchEvent.class)
+    @Async("eventListenerTaskExecutor")
     public void saveSearchHistory(UserSearchEvent event){
         RPanUserSearchHistory record=new RPanUserSearchHistory();
         record.setId(IdUtil.get());
