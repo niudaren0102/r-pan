@@ -1,0 +1,25 @@
+package xyz.xlls.rpan.lock.local;
+
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.SpringBootConfiguration;
+import org.springframework.context.annotation.Bean;
+import org.springframework.integration.support.locks.DefaultLockRegistry;
+import org.springframework.integration.support.locks.LockRegistry;
+
+/**
+ * 本地锁配置类
+ */
+@Slf4j
+@SpringBootConfiguration
+public class LocalLockConfig {
+    /**
+     * 配置本地锁注册器
+     * @return
+     */
+    @Bean
+    public LockRegistry localLockRegistry(){
+        DefaultLockRegistry lockRegistry = new DefaultLockRegistry();
+        log.info("the local lock is loaded successfully!");
+        return lockRegistry;
+    }
+}
