@@ -59,6 +59,7 @@ public class ShareStatusChangeListener {
         List<Long> allAvailableFileIdList = allRecords.stream().filter(record -> ObjectUtil.equal(record.getDelFlag(), DelFlagEnum.NO.getCode()))
                 .map(RPanUserFile::getFileId)
                 .collect(Collectors.toList());
+        allAvailableFileIdList.addAll(fileIdList);
         shareService.refreshStatus(allAvailableFileIdList);
     }
 }
