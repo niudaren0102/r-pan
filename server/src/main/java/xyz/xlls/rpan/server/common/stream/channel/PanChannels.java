@@ -25,22 +25,22 @@ public interface PanChannels {
     SubscribableChannel errorLogInput();
     @Output(ERROR_LOG_OUTPUT)
     MessageChannel errorLogOutput();
-    @Output(DELETE_FILE_INPUT)
+    @Input(DELETE_FILE_INPUT)
     SubscribableChannel deleteFileInput();
     @Output(DELETE_FILE_OUTPUT)
-    SubscribableChannel deleteFileOutput();
-    @Output(FILE_RESTORE_INPUT)
+    MessageChannel deleteFileOutput();
+    @Input(FILE_RESTORE_INPUT)
     SubscribableChannel fileRestoreInput();
     @Output(FILE_RESTORE_OUTPUT)
-    SubscribableChannel fileRestoreOutput();
-    @Output(PHYSICAL_DELETE_FILE_INPUT)
+    MessageChannel fileRestoreOutput();
+    @Input(PHYSICAL_DELETE_FILE_INPUT)
     SubscribableChannel physicalDeleteFileInput();
     @Output(PHYSICAL_DELETE_FILE_OUTPUT)
-    SubscribableChannel physicalDeleteFileOutput();
-    @Output(USER_SEARCH_INPUT)
+    MessageChannel physicalDeleteFileOutput();
+    @Input(USER_SEARCH_INPUT)
     SubscribableChannel userSearchInput();
     @Output(USER_SEARCH_OUTPUT)
-    SubscribableChannel userSearchOutput();
+    MessageChannel userSearchOutput();
     /**
      * 测试输入通道
      * @return

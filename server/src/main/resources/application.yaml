@@ -31,6 +31,33 @@ spring:
           group: testTopicGroup1
         testOutput:
           destination: testTopic
+        errorLogInput:
+          destination: errorLogTopic
+          group: errorLogGroup1
+        errorLogOutput:
+          destination: errorLogTopic
+        deleteFileInput:
+          destination: deleteFileTopic
+          group: deleteFileTopicGroup1
+        deleteFileOutput:
+          destination: deleteFileTopic
+        fileRestoreInput:
+          destination: fileRestoreTopic
+          group: fileRestoreTopicGroup1
+        fileRestoreOutput:
+          destination: fileRestoreTopic
+        physicalDeleteFileInput:
+          destination: physicalDeleteFileTopic
+          group: physicalDeleteFileTopicGroup1
+        physicalDeleteFileOutput:
+          destination: physicalDeleteFileTopic
+        userSearchInput:
+          destination: userSearchTopic
+          group: userSearchTopicGroup1
+        userSearchOutput:
+          destination: userSearchTopic
+
+
 mybatis-plus:
   mapper-locations: classpath:mappers/**/*.xml
 

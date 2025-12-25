@@ -2,28 +2,25 @@ package xyz.xlls.rpan.server.modules.recycle.service.impl;
 
 import cn.hutool.core.collection.CollectionUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
-import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.ApplicationContextAware;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import xyz.xlls.rpan.core.constants.RPanConstants;
 import xyz.xlls.rpan.core.exception.RPanBusinessException;
-import xyz.xlls.rpan.server.common.event.file.FilePhysicalDeleteEvent;
-import xyz.xlls.rpan.server.common.event.file.FileRestoreEvent;
+import xyz.xlls.rpan.server.common.stream.channel.PanChannels;
+import xyz.xlls.rpan.server.common.stream.event.file.FilePhysicalDeleteEvent;
+import xyz.xlls.rpan.server.common.stream.event.file.FileRestoreEvent;
 import xyz.xlls.rpan.server.modules.file.context.QueryFileContext;
 import xyz.xlls.rpan.server.modules.file.entity.RPanUserFile;
 import xyz.xlls.rpan.server.modules.file.enums.DelFlagEnum;
 import xyz.xlls.rpan.server.modules.file.service.IUserFileService;
-import xyz.xlls.rpan.server.modules.file.service.impl.UserFileServiceImpl;
 import xyz.xlls.rpan.server.modules.file.vo.RPanUserFileVO;
 import xyz.xlls.rpan.server.modules.recycle.context.DeleteContext;
 import xyz.xlls.rpan.server.modules.recycle.context.QueryRecycleFileListContext;
 import xyz.xlls.rpan.server.modules.recycle.context.RestoreContext;
 import xyz.xlls.rpan.server.modules.recycle.service.IRecycleService;
+import xyz.xlls.rpan.stream.core.IStreamProducer;
 
-import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
@@ -33,11 +30,12 @@ import java.util.stream.Collectors;
  * 回收站模块业务处理类
  */
 @Service
-public class RecycleServiceImpl implements IRecycleService, ApplicationContextAware {
+public class RecycleServiceImpl implements IRecycleService {
     @Autowired
     private IUserFileService userFileService;
-    private ApplicationContext applicationContext;
-
+    @Autowired
+    @Qualifier(value = "defaultStreamProducer")
+    private IStreamProducer producer;
     /**
      * 查询用户的回收站文件列表
      *
@@ -91,8 +89,8 @@ public class RecycleServiceImpl implements IRecycleService, ApplicationContextAw
      * @param context
      */
     private void afterDelete(DeleteContext context) {
-        FilePhysicalDeleteEvent event = new FilePhysicalDeleteEvent(this, context.getAllRecords());
-        applicationContext.publishEvent(event);
+        FilePhysicalDeleteEvent event = new FilePhysicalDeleteEvent( context.getAllRecords());
+        producer.sendMessage(PanChannels.PHYSICAL_DELETE_FILE_OUTPUT, event);
 
     }
 
@@ -138,8 +136,8 @@ public class RecycleServiceImpl implements IRecycleService, ApplicationContextAw
      * @param context
      */
     private void afterRestore(RestoreContext context) {
-        FileRestoreEvent restoreEvent=new FileRestoreEvent(this,context.getFileIdList());
-        applicationContext.publishEvent(restoreEvent);
+        FileRestoreEvent restoreEvent=new FileRestoreEvent(context.getFileIdList());
+        producer.sendMessage(PanChannels.FILE_RESTORE_OUTPUT,restoreEvent);
     }
 
     /**
@@ -206,8 +204,4 @@ public class RecycleServiceImpl implements IRecycleService, ApplicationContextAw
         context.setRecords(records);
     }
 
-    @Override
-    public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
-        this.applicationContext=applicationContext;
-    }
 }
