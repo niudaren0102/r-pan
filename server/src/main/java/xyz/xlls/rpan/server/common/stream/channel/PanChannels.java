@@ -11,7 +11,36 @@ import org.springframework.messaging.SubscribableChannel;
 public interface PanChannels {
     String TEST_INPUT="testInput";
     String TEST_OUTPUT="testOutput";
-
+    String ERROR_LOG_INPUT="errorLogInput";
+    String ERROR_LOG_OUTPUT="errorLogOutput";
+    String DELETE_FILE_INPUT="deleteFileInput";
+    String DELETE_FILE_OUTPUT="deleteFileOutput";
+    String FILE_RESTORE_INPUT="fileRestoreInput";
+    String FILE_RESTORE_OUTPUT="fileRestoreOutput";
+    String PHYSICAL_DELETE_FILE_INPUT="physicalDeleteFileInput";
+    String PHYSICAL_DELETE_FILE_OUTPUT="physicalDeleteFileOutput";
+    String USER_SEARCH_INPUT="userSearchInput";
+    String USER_SEARCH_OUTPUT="userSearchOutput";
+    @Input(ERROR_LOG_INPUT)
+    SubscribableChannel errorLogInput();
+    @Output(ERROR_LOG_OUTPUT)
+    MessageChannel errorLogOutput();
+    @Output(DELETE_FILE_INPUT)
+    SubscribableChannel deleteFileInput();
+    @Output(DELETE_FILE_OUTPUT)
+    SubscribableChannel deleteFileOutput();
+    @Output(FILE_RESTORE_INPUT)
+    SubscribableChannel fileRestoreInput();
+    @Output(FILE_RESTORE_OUTPUT)
+    SubscribableChannel fileRestoreOutput();
+    @Output(PHYSICAL_DELETE_FILE_INPUT)
+    SubscribableChannel physicalDeleteFileInput();
+    @Output(PHYSICAL_DELETE_FILE_OUTPUT)
+    SubscribableChannel physicalDeleteFileOutput();
+    @Output(USER_SEARCH_INPUT)
+    SubscribableChannel userSearchInput();
+    @Output(USER_SEARCH_OUTPUT)
+    SubscribableChannel userSearchOutput();
     /**
      * 测试输入通道
      * @return

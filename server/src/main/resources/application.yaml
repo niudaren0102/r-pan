@@ -31,7 +31,6 @@ spring:
           group: testTopicGroup1
         testOutput:
           destination: testTopic
-
 mybatis-plus:
   mapper-locations: classpath:mappers/**/*.xml
 

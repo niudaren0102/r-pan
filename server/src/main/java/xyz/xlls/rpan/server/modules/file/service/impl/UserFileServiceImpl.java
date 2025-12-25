@@ -9,16 +9,17 @@ import com.google.common.collect.Lists;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.ApplicationContext;
-import org.springframework.context.ApplicationContextAware;
 import org.springframework.http.MediaType;
 import org.springframework.transaction.annotation.Transactional;
 import xyz.xlls.rpan.core.constants.RPanConstants;
 import xyz.xlls.rpan.core.exception.RPanBusinessException;
 import xyz.xlls.rpan.core.utils.FileUtil;
 import xyz.xlls.rpan.core.utils.IdUtil;
-import xyz.xlls.rpan.server.common.event.file.DeleteFileEvent;
-import xyz.xlls.rpan.server.common.event.search.UserSearchEvent;
+import xyz.xlls.rpan.server.common.stream.channel.PanChannels;
+import xyz.xlls.rpan.server.common.stream.event.file.DeleteFileEvent;
+import xyz.xlls.rpan.server.common.stream.event.search.UserSearchEvent;
 import xyz.xlls.rpan.server.common.utils.HttpUtil;
 import xyz.xlls.rpan.server.modules.file.constants.FileConstants;
 import xyz.xlls.rpan.server.modules.file.context.*;
@@ -36,6 +37,7 @@ import org.springframework.stereotype.Service;
 import xyz.xlls.rpan.server.modules.file.vo.*;
 import xyz.xlls.rpan.storage.engine.core.StorageEngine;
 import xyz.xlls.rpan.storage.engine.core.context.ReadFileContext;
+import xyz.xlls.rpan.stream.core.IStreamProducer;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
@@ -50,8 +52,7 @@ import java.util.stream.Collectors;
  */
 @Service
 public class UserFileServiceImpl extends ServiceImpl<RPanUserFileMapper, RPanUserFile>
-        implements IUserFileService, ApplicationContextAware {
-    private ApplicationContext applicationContext;
+        implements IUserFileService {
     @Autowired
     private IFileService fileService;
     @Autowired
@@ -60,6 +61,10 @@ public class UserFileServiceImpl extends ServiceImpl<RPanUserFileMapper, RPanUse
     private IFileChunkService fileChunkService;
     @Autowired
     private StorageEngine storageEngine;
+    @Autowired
+    @Qualifier(value = "defaultStreamProducer")
+    private IStreamProducer producer;
+
 
     /**
      * 创建文件夹信息
@@ -207,8 +212,8 @@ public class UserFileServiceImpl extends ServiceImpl<RPanUserFileMapper, RPanUse
      * @param context
      */
     private void afterFileDelete(DeleteFileContext context) {
-        DeleteFileEvent deleteFileEvent = new DeleteFileEvent(this, context.getFileIdList());
-        applicationContext.publishEvent(deleteFileEvent);
+        DeleteFileEvent deleteFileEvent = new DeleteFileEvent( context.getFileIdList());
+        producer.sendMessage(PanChannels.DELETE_FILE_OUTPUT,deleteFileEvent);
     }
 
     /**
@@ -492,8 +497,8 @@ public class UserFileServiceImpl extends ServiceImpl<RPanUserFileMapper, RPanUse
      * @param context
      */
     private void afterSearch(FileSearchContext context) {
-        UserSearchEvent userSearchEvent=new UserSearchEvent(this, context.getKeyword(), context.getUserId());
-        applicationContext.publishEvent(userSearchEvent);
+        UserSearchEvent userSearchEvent=new UserSearchEvent(context.getKeyword(), context.getUserId());
+        producer.sendMessage(PanChannels.USER_SEARCH_OUTPUT,userSearchEvent);
     }
 
     /**
@@ -1034,11 +1039,6 @@ public class UserFileServiceImpl extends ServiceImpl<RPanUserFileMapper, RPanUse
         queryWrapper.likeLeft(RPanUserFile::getFilename, newFilenameWithoutSuffix);
         String sql = queryWrapper.getTargetSql();
         return count(queryWrapper);
-    }
-
-    @Override
-    public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
-        this.applicationContext = applicationContext;
     }
 }
 
