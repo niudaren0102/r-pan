@@ -19,7 +19,7 @@
         <module>cache</module>
         <module>schedule</module>
         <module>storage-engine</module>
-        <module>lock</module>
+        <module>stream</module>
     </modules>
 
     <properties>

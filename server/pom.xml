@@ -65,6 +65,11 @@
             <artifactId>spring-boot-configuration-processor</artifactId>
             <optional>true</optional>
         </dependency>
+        <dependency>
+            <groupId>xyz.xlls.rpan</groupId>
+            <artifactId>r-pan-stream-rocketmq</artifactId>
+            <version>1.0</version>
+        </dependency>
     </dependencies>
     <build>
         <finalName>r-pan-server</finalName>

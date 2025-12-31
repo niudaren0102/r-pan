@@ -6,15 +6,16 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.google.common.collect.Lists;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import xyz.xlls.rpan.core.exception.RPanBusinessException;
 import xyz.xlls.rpan.core.utils.FileUtil;
 import xyz.xlls.rpan.core.utils.IdUtil;
-import xyz.xlls.rpan.server.common.event.log.ErrorLogEvent;
+import xyz.xlls.rpan.server.common.stream.channel.PanChannels;
+import xyz.xlls.rpan.server.common.stream.event.log.ErrorLogEvent;
 import xyz.xlls.rpan.server.modules.file.context.FileChunkMergeAndSaveContext;
 import xyz.xlls.rpan.server.modules.file.context.FileSaveContext;
-import xyz.xlls.rpan.server.modules.file.context.QueryUploadedChunksContext;
 import xyz.xlls.rpan.server.modules.file.context.QueryUploadedChunksRecordContext;
 import xyz.xlls.rpan.server.modules.file.converter.FileConverter;
 import xyz.xlls.rpan.server.modules.file.entity.RPanFile;
@@ -27,6 +28,7 @@ import xyz.xlls.rpan.storage.engine.core.StorageEngine;
 import xyz.xlls.rpan.storage.engine.core.context.DeleteFileContext;
 import xyz.xlls.rpan.storage.engine.core.context.MergeFileContext;
 import xyz.xlls.rpan.storage.engine.core.context.StoreFileContext;
+import xyz.xlls.rpan.stream.core.IStreamProducer;
 
 import java.io.IOException;
 import java.util.Comparator;
@@ -41,7 +43,7 @@ import java.util.stream.Collectors;
 */
 @Service
 public class FileServiceImpl extends ServiceImpl<RPanFileMapper, RPanFile>
-    implements IFileService, ApplicationContextAware {
+    implements IFileService {
     @Autowired
     private StorageEngine storageEngine;
     @Autowired
@@ -49,7 +51,8 @@ public class FileServiceImpl extends ServiceImpl<RPanFileMapper, RPanFile>
     @Autowired
     private FileConverter fileConverter;
     @Autowired
-    private ApplicationContext applicationContext;
+    @Qualifier(value = "defaultStreamProducer")
+    private IStreamProducer producer;
 
     @Override
     public List<RPanFile> getFileByUserIdAndIdentifier(Long userId, String identifier) {
@@ -147,8 +150,8 @@ public class FileServiceImpl extends ServiceImpl<RPanFileMapper, RPanFile>
                 storageEngine.delete(deleteFileContext);
             }catch (IOException e){
                 e.printStackTrace();
-                ErrorLogEvent errorLogEvent=new ErrorLogEvent(this,"文件物理删除失败，请执行手动删除！文件路径："+realPath,userId);
-                applicationContext.publishEvent(errorLogEvent);
+                ErrorLogEvent errorLogEvent=new ErrorLogEvent("文件物理删除失败，请执行手动删除！文件路径："+realPath,userId);
+                producer.sendMessage(PanChannels.ERROR_LOG_OUTPUT,errorLogEvent);
                 throw new RuntimeException("");
             }
         }
@@ -198,10 +201,7 @@ public class FileServiceImpl extends ServiceImpl<RPanFileMapper, RPanFile>
 
     }
 
-    @Override
-    public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
-        this.applicationContext=applicationContext;
-    }
+
 }
 
 

@@ -12,14 +12,52 @@ spring:
       max-file-size: 3072MB
       max-request-size: 3072MB #上传文件大小和请求大小
   datasource:
-    username: rpan
+    username: root
     password: 123123
-    url: jdbc:mysql://db.kk.com:3306/rpan?characterEncoding=utf8&serverTimezone=GMT%2B8&useSSL=false&allowPublicKeyRetrieval=true
+    url: jdbc:mysql://127.0.0.1:3306/rpan?characterEncoding=utf8&serverTimezone=GMT%2B8&useSSL=false&allowPublicKeyRetrieval=true
     driver-class-name: com.mysql.cj.jdbc.Driver
   redis:
     database: 1
-    host: db.kk.com
+    host: 127.0.0.1
     password: 123123
+  cloud:
+    stream:
+      rocketmq:
+        binder:
+          name-server: localhost:9876
+      bindings:
+        testInput:
+          destination: testTopic
+          group: testTopicGroup1
+        testOutput:
+          destination: testTopic
+        errorLogInput:
+          destination: errorLogTopic
+          group: errorLogGroup1
+        errorLogOutput:
+          destination: errorLogTopic
+        deleteFileInput:
+          destination: deleteFileTopic
+          group: deleteFileTopicGroup1
+        deleteFileOutput:
+          destination: deleteFileTopic
+        fileRestoreInput:
+          destination: fileRestoreTopic
+          group: fileRestoreTopicGroup1
+        fileRestoreOutput:
+          destination: fileRestoreTopic
+        physicalDeleteFileInput:
+          destination: physicalDeleteFileTopic
+          group: physicalDeleteFileTopicGroup1
+        physicalDeleteFileOutput:
+          destination: physicalDeleteFileTopic
+        userSearchInput:
+          destination: userSearchTopic
+          group: userSearchTopicGroup1
+        userSearchOutput:
+          destination: userSearchTopic
+
+
 mybatis-plus:
   mapper-locations: classpath:mappers/**/*.xml
 

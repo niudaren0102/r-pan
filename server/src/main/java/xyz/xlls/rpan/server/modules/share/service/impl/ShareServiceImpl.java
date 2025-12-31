@@ -10,6 +10,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.assertj.core.util.Lists;
 import org.assertj.core.util.Sets;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,7 +21,8 @@ import xyz.xlls.rpan.core.utils.IdUtil;
 import xyz.xlls.rpan.core.utils.JwtUtil;
 import xyz.xlls.rpan.core.utils.UUIDUtil;
 import xyz.xlls.rpan.server.common.config.PanServerConfig;
-import xyz.xlls.rpan.server.common.event.log.ErrorLogEvent;
+import xyz.xlls.rpan.server.common.stream.channel.PanChannels;
+import xyz.xlls.rpan.server.common.stream.event.log.ErrorLogEvent;
 import xyz.xlls.rpan.server.modules.file.constants.FileConstants;
 import xyz.xlls.rpan.server.modules.file.context.CopyFileContext;
 import xyz.xlls.rpan.server.modules.file.context.FileDownloadContext;
@@ -42,6 +44,7 @@ import org.springframework.stereotype.Service;
 import xyz.xlls.rpan.server.modules.share.vo.*;
 import xyz.xlls.rpan.server.modules.user.entity.RPanUser;
 import xyz.xlls.rpan.server.modules.user.service.IUserService;
+import xyz.xlls.rpan.stream.core.IStreamProducer;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -53,7 +56,7 @@ import java.util.stream.Collectors;
  */
 @Service
 public class ShareServiceImpl extends ServiceImpl<RPanShareMapper, RPanShare>
-        implements IShareService, ApplicationContextAware {
+        implements IShareService {
     @Autowired
     private PanServerConfig config;
     @Autowired
@@ -63,8 +66,8 @@ public class ShareServiceImpl extends ServiceImpl<RPanShareMapper, RPanShare>
     @Autowired
     private IUserService userService;
     @Autowired
-    private ApplicationContext applicationContext;
-
+    @Qualifier(value = "defaultStreamProducer")
+    private IStreamProducer producer;
     /**
      * 创建分享链接
      * 1、拼装分享实体，保存到数据库
@@ -266,7 +269,7 @@ public class ShareServiceImpl extends ServiceImpl<RPanShareMapper, RPanShare>
         updateWrapper.set(RPanShare::getShareStatus,shareStatus.getCode());
         boolean update = this.update(updateWrapper);
         if(!update){
-            applicationContext.publishEvent(new ErrorLogEvent(this,"更新分享状态失败，请手动更改状态，分享ID为："+shareId+"，分享状态改为："+shareStatus.getDesc(),RPanConstants.ZERO_LONG));
+            producer.sendMessage(PanChannels.ERROR_LOG_OUTPUT,new ErrorLogEvent("更新分享状态失败，请手动更改状态，分享ID为："+shareId+"，分享状态改为："+shareStatus.getDesc(),RPanConstants.ZERO_LONG));
         }
     }
 
@@ -523,7 +526,7 @@ public class ShareServiceImpl extends ServiceImpl<RPanShareMapper, RPanShare>
     /**
      * 检查分享的状态是否正常
      *
-     * @param context
+     * @param shareId
      */
     private RPanShare checkShareStatus(Long shareId) {
         RPanShare record = this.getById(shareId);
@@ -670,9 +673,6 @@ public class ShareServiceImpl extends ServiceImpl<RPanShareMapper, RPanShare>
         return sharePrefix + shareId;
     }
 
-    public void setApplicationContext(ApplicationContext applicationContext) {
-        this.applicationContext = applicationContext;
-    }
 }
 
 
