@@ -698,7 +698,7 @@ public class UserFileServiceImpl extends ServiceImpl<RPanUserFileMapper, RPanUse
                 folderTreeNodeVO.getChildren().addAll(children);
             }
         }
-        return mappedFolderTreeNodeVOList.stream().filter(folderTreeNodeVO -> Objects.equals(folderTreeNodeVO.getParentId(),FileConstants.TOP_PARENT_ID)).collect(Collectors.toList());
+        return mappedFolderTreeNodeVOList.stream() .filter(folderTreeNodeVO -> Objects.equals(folderTreeNodeVO.getParentId(),FileConstants.TOP_PARENT_ID)).collect(Collectors.toList());
     }
 
     /**

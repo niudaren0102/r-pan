@@ -20,6 +20,7 @@ import xyz.xlls.rpan.core.response.ResponseCode;
 import xyz.xlls.rpan.core.utils.IdUtil;
 import xyz.xlls.rpan.core.utils.JwtUtil;
 import xyz.xlls.rpan.core.utils.UUIDUtil;
+import xyz.xlls.rpan.server.common.cache.ManualCacheService;
 import xyz.xlls.rpan.server.common.config.PanServerConfig;
 import xyz.xlls.rpan.server.common.stream.channel.PanChannels;
 import xyz.xlls.rpan.server.common.stream.event.log.ErrorLogEvent;
@@ -46,6 +47,7 @@ import xyz.xlls.rpan.server.modules.user.entity.RPanUser;
 import xyz.xlls.rpan.server.modules.user.service.IUserService;
 import xyz.xlls.rpan.stream.core.IStreamProducer;
 
+import java.io.Serializable;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -68,6 +70,9 @@ public class ShareServiceImpl extends ServiceImpl<RPanShareMapper, RPanShare>
     @Autowired
     @Qualifier(value = "defaultStreamProducer")
     private IStreamProducer producer;
+    @Autowired
+    @Qualifier(value = "shareManualCacheService")
+    private ManualCacheService<RPanShare> cacheService;
     /**
      * 创建分享链接
      * 1、拼装分享实体，保存到数据库
@@ -255,21 +260,18 @@ public class ShareServiceImpl extends ServiceImpl<RPanShareMapper, RPanShare>
         if(ObjectUtil.equal(record.getShareStatus(),shareStatus)){
             return;
         }
-        doChangeShareStatus(shareId,shareStatus);
+        doChangeShareStatus(record,shareStatus);
     }
 
     /**
      * 执行刷新文件分享的状态动作
-     * @param shareId
+     * @param record
      * @param shareStatus
      */
-    private void doChangeShareStatus(Long shareId, ShareStatusEnum shareStatus) {
-        LambdaUpdateWrapper<RPanShare> updateWrapper = new LambdaUpdateWrapper<>();
-        updateWrapper.eq(RPanShare::getShareId,shareId);
-        updateWrapper.set(RPanShare::getShareStatus,shareStatus.getCode());
-        boolean update = this.update(updateWrapper);
-        if(!update){
-            producer.sendMessage(PanChannels.ERROR_LOG_OUTPUT,new ErrorLogEvent("更新分享状态失败，请手动更改状态，分享ID为："+shareId+"，分享状态改为："+shareStatus.getDesc(),RPanConstants.ZERO_LONG));
+    private void doChangeShareStatus(RPanShare record, ShareStatusEnum shareStatus) {
+        record.setShareStatus(shareStatus.getCode());
+        if(!updateById(record)){
+            producer.sendMessage(PanChannels.ERROR_LOG_OUTPUT,new ErrorLogEvent("更新分享状态失败，请手动更改状态，分享ID为："+record.getShareId()+"，分享状态改为："+shareStatus.getDesc(),RPanConstants.ZERO_LONG));
         }
     }
 
@@ -673,6 +675,45 @@ public class ShareServiceImpl extends ServiceImpl<RPanShareMapper, RPanShare>
         return sharePrefix + shareId;
     }
 
+    @Override
+    public boolean removeById(Serializable id) {
+        return cacheService.removeById(id);
+//        return super.removeById(id);
+    }
+
+    @Override
+    public boolean removeByIds(Collection<? extends Serializable> idList) {
+        return cacheService.removeByIds(idList);
+//        return super.removeByIds(idList);
+    }
+
+    @Override
+    public boolean updateById(RPanShare entity) {
+        return cacheService.updateById(entity.getShareId(),entity);
+//        return super.updateById(entity);
+    }
+
+    @Override
+    public boolean updateBatchById(Collection<RPanShare> entityList) {
+        if(CollectionUtil.isEmpty(entityList)){
+            return true;
+        }
+        Map<Long, RPanShare> entityMap = entityList.stream().collect(Collectors.toMap(RPanShare::getShareId, e -> e));
+        return cacheService.updateByIds(entityMap);
+//        return super.updateBatchById(entityList);
+    }
+
+    @Override
+    public RPanShare getById(Serializable id) {
+        return cacheService.getById(id);
+//        return super.getById(id);
+    }
+
+    @Override
+    public List<RPanShare> listByIds(Collection<? extends Serializable> idList) {
+        return cacheService.getByIds(idList);
+//        return super.listByIds(idList);
+    }
 }
 
 

@@ -12,19 +12,19 @@ spring:
       max-file-size: 3072MB
       max-request-size: 3072MB #上传文件大小和请求大小
   datasource:
-    username: root
-    password: 123123
-    url: jdbc:mysql://127.0.0.1:3306/rpan?characterEncoding=utf8&serverTimezone=GMT%2B8&useSSL=false&allowPublicKeyRetrieval=true
+    username: rpan
+    password: kS4hdDCmdPWtiDza
+    url: jdbc:mysql://192.168.137.216:3306/rpan?characterEncoding=utf8&serverTimezone=GMT%2B8&useSSL=false&allowPublicKeyRetrieval=true
     driver-class-name: com.mysql.cj.jdbc.Driver
   redis:
     database: 1
-    host: 127.0.0.1
-    password: 123123
+    host: 192.168.137.216
+    password: redis_ffZkbw
   cloud:
     stream:
       rocketmq:
         binder:
-          name-server: localhost:9876
+          name-server: 192.168.137.216:9876
       bindings:
         testInput:
           destination: testTopic

@@ -9,6 +9,10 @@ import xyz.xlls.rpan.server.modules.user.entity.RPanUser;
 import xyz.xlls.rpan.server.modules.user.mapper.RPanUserMapper;
 
 import java.io.Serializable;
+
+/**
+ * 用户模块缓存业务处理类
+ */
 @Component(value = "userAnnotationCacheService")
 public class UserCacheService implements AnnotationCacheService<RPanUser> {
     @Autowired

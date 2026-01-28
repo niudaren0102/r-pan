@@ -244,8 +244,8 @@
 
     <repositories>
         <repository>
-            <id>spring</id>
-            <url>https://maven.aliyun.com/repository/spring</url>
+            <id>central</id>
+            <url>https://maven.aliyun.com/repository/central</url>
             <releases>
                 <enabled>true</enabled>
             </releases>
@@ -254,21 +254,21 @@
             </snapshots>
         </repository>
 
-        <repository>
-            <id>spring-milestones</id>
-            <name>Spring Milestones</name>
-            <url>https://repo.spring.io/milestone</url>
-        </repository>
-        <repository>
-            <id>spring-releases</id>
-            <name>Spring Releases</name>
-            <url>https://repo.spring.io/libs-release</url>
-        </repository>
-        <repository>
-            <id>spring-lib-milestones</id>
-            <name>Spring Milestones</name>
-            <url>https://repo.spring.io/libs-milestone</url>
-        </repository>
+<!--        <repository>-->
+<!--            <id>spring-milestones</id>-->
+<!--            <name>Spring Milestones</name>-->
+<!--            <url>https://repo.spring.io/milestone</url>-->
+<!--        </repository>-->
+<!--        <repository>-->
+<!--            <id>spring-releases</id>-->
+<!--            <name>Spring Releases</name>-->
+<!--            <url>https://repo.spring.io/libs-release</url>-->
+<!--        </repository>-->
+<!--        <repository>-->
+<!--            <id>spring-lib-milestones</id>-->
+<!--            <name>Spring Milestones</name>-->
+<!--            <url>https://repo.spring.io/libs-milestone</url>-->
+<!--        </repository>-->
     </repositories>
 
 </project>

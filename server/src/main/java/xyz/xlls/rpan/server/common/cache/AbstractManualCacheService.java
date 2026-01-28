@@ -91,7 +91,7 @@ public abstract class AbstractManualCacheService<V> implements ManualCacheServic
      * 1、查询缓存，如果命中直接返回
      * 2、如果没有命中，查询数据库
      * 3、如果数据库有记录，回填缓存
-     * @param ids
+     * @param id
      * @return
      */
     @Override
