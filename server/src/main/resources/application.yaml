@@ -60,7 +60,6 @@ spring:
 
 mybatis-plus:
   mapper-locations: classpath:mappers/**/*.xml
-
 #  application:
 #    name: r-pan-server
 #  output:
@@ -147,3 +146,5 @@ xyz:
             tracker-list:
               - fastdfs.kk.com:22122
             group: group1
+      server:
+        share-prefix: http://127.0.0.1:5173/share/

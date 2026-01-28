@@ -11,8 +11,8 @@ import xyz.xlls.rpan.core.constants.RPanConstants;
 @ConfigurationProperties(prefix = "xyz.xlls.pan.server")
 @Data
 public class PanServerConfig {
-    @Value("${server.port}")
-    private Integer serverPort;
+//    @Value("${server.port}")
+//    private Integer serverPort;
     /**
      * 文件分片上传的过期天数
      */
@@ -20,5 +20,5 @@ public class PanServerConfig {
     /**
      * 分享链接的前缀
      */
-    private String sharePrefix="http://127.0.0.1:"+serverPort+"/share/";
+    private String sharePrefix="http://127.0.0.1:8080/share/";
 }

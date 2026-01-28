@@ -48,6 +48,7 @@ import xyz.xlls.rpan.server.modules.user.service.IUserService;
 import xyz.xlls.rpan.stream.core.IStreamProducer;
 
 import java.io.Serializable;
+import java.net.URLEncoder;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -672,7 +673,7 @@ public class ShareServiceImpl extends ServiceImpl<RPanShareMapper, RPanShare>
         if (sharePrefix.lastIndexOf(RPanConstants.SLASH_STR) == RPanConstants.MINUS_ONE_INT) {
             sharePrefix += RPanConstants.SLASH_STR;
         }
-        return sharePrefix + shareId;
+        return sharePrefix + URLEncoder.encode(IdUtil.encrypt(shareId));
     }
 
     @Override

@@ -32,7 +32,7 @@ import java.util.List;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(classes = RPanServerLauncher.class)
-@Transactional
+//@Transactional
 public class ShareTest {
     @Autowired
     private IUserService userService;
@@ -40,7 +40,18 @@ public class ShareTest {
     private IUserFileService userFileService;
     @Autowired
     private IShareService shareService;
-
+    @Test
+    public void init(){
+        CreateShareUrlContext  context = new CreateShareUrlContext();
+        context.setUserId(2016502416968581120L);
+        context.setShareType(ShareTypeEnum.NEED_SHARE_CODE.getCode());
+        context.setShareDayType(ShareDayTypeEnum.PERMANENT_VALIDITY.getCode());
+        context.setShareFileIdList(Lists.newArrayList(2016503321294077952L));
+        for (int i = 0; i < 10000000; i++) {
+            context.setShareName("测试分享"+i);
+            shareService.create(context);
+        }
+    }
     /**
      * 创建分享链接成功
      */
